@@ -101,7 +101,7 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
   // TODO: Create help message to send to user
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase() === 'help') {
-    await sendEphemeralToUser(client, body.user_id, body.channel_id, 'How to use /karrotawards', [{
+    await sendEphemeralToUser(client, body.user_id, body.channel_id, 'How to use KarrotAwards:', [{
       'text': `To give someone one or multiple awards you can use \`/karrotawards\`.\nTo see the leaderboard you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers!\nTo see which awards certain user currently have you can use \`/karrotawards scorecard @someone\`. Note that if you mention multiple users, only the first one mentioned will be displayed.`
     }]);
   }

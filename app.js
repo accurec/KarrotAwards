@@ -20,7 +20,7 @@ const nodeHtmlToImage = require('node-html-to-image');
 const { MongoClient, ObjectId } = require("mongodb");
 // Slack related packages.
 const { App } = require("@slack/bolt");
-const { WebClient } = require('@slack/web-api');
+const { WebClient, LogLevel } = require("@slack/web-api");
 // Custom built classes to support this application.
 const { Modal } = require("./entities/modal.js");
 const { ViewSubmissionPayload } = require("./entities/viewSubmissionPayload.js");
@@ -32,7 +32,8 @@ const mongoDbUri = `mongodb+srv://${process.env.MONGODB_USER_NAME}:${process.env
 // Initialize the Bolt app with bot token and signing secret.
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
-  signingSecret: process.env.SLACK_SIGNING_SECRET
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  logLevel: LogLevel.DEBUG
 });
 
 /**

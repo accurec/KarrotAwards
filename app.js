@@ -101,9 +101,21 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
   // TODO: Create help message to send to user
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase() === 'help') {
-    await sendEphemeralToUser(client, body.user_id, body.channel_id, 'How to use KarrotAwards:', [{
-      'text': `To give someone one or multiple awards you can use \`/karrotawards\`.\nTo see the leaderboard you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers!\nTo see which awards certain user currently have you can use \`/karrotawards scorecard @someone\`. Note that if you mention multiple users, only the first one mentioned will be displayed.`
-    }]);
+    await sendEphemeralToUser(client, body.user_id, body.channel_id, 'How to use KarrotAwards:',
+      [{
+        color: "#0015ff",
+        blocks: [
+          {
+            type: 'context',
+            elements: [
+              {
+                type: 'mrkdwn',
+                text: `To give someone one or multiple awards you can use \`/karrotawards\`.\nTo see the leaderboard you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers!\nTo see which awards certain user currently have you can use \`/karrotawards scorecard @someone\`. Note that if you mention multiple users, only the first one mentioned will be displayed.`
+              }
+            ]
+          }
+        ]
+      }]);
   }
   // Main flow to give someone an award
   else if (body.text === '') {
@@ -156,7 +168,7 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
   else if (body.text.toLowerCase() === 'leaderboard') {
     console.log(`${new Date()} -> Got request from [${commandRequester}] to display scorecard.`);
 
-    await sendEphemeralToUser(client, body.user_id, body.channel_id, ':man-biking: Please wait, I\'m working hard on your reqeust! :woman-biking:'); // TODO: See if this is actually right way to do this
+    await sendEphemeralToUser(client, body.user_id, body.channel_id, ':man-biking: Please wait, I\'m working hard on your request! :woman-biking:'); // TODO: See if this is actually right way to do this
 
     // TODO: Refactor getting the awards and user stats into separate functions
     // Get users according to the filter, get all awards
@@ -265,7 +277,7 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
 
     // Send image to Slack
     try {
-      const uploadResult = await client.files.upload({ file: scorecardImage, filetype: 'binary', channels: body.channel_id, title: ':arrow_down:', initial_comment: `:sunglasses: Requested by the fabulous <@${body.user_id}>! :sunglasses:\n:fireworks: KarrotAwards Scorecard! :fireworks:` });
+      const uploadResult = await client.files.upload({ file: scorecardImage, filetype: 'binary', channels: body.channel_id, title: ':arrow_down:', initial_comment: `:sunglasses: Requested by the fabulous <@${body.user_id}>! :sunglasses:\n:fireworks: KarrotAwards Leaderboard! :fireworks:` });
     }
     catch (error) {
       console.log(error);
@@ -284,6 +296,7 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
     else {
       userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
       console.log(`Getting scorecard for the user id [${userIdToShow}].`);
+      // TODO: Generate image and send back to the user with ephemeral.
     }
   }
 });
@@ -309,7 +322,7 @@ app.view('modal_submission', async ({ ack, body, view, client }) => {
     await ack();
   }
 
-  await sendEphemeralToUser(client, viewSubmissionPayload.user_id, viewSubmissionPayload.channel_id, ':man-biking: Please wait, I\'m working hard on your reqeust! :woman-biking:'); // TODO: See if this is actually right way to do this
+  await sendEphemeralToUser(client, viewSubmissionPayload.user_id, viewSubmissionPayload.channel_id, ':man-biking: Please wait, I\'m working hard on your request! :woman-biking:'); // TODO: See if this is actually right way to do this
 
   // Create new MongoDB client
   let mongoClient = createMongoClient(mongoDbUri);

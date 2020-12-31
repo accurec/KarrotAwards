@@ -8,6 +8,7 @@ class HtmlTable {
             .tg th{border-color:black;border-style:solid;border-width:2px;font-family:Arial, sans-serif;font-size:14px;font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
             .tg .tg-table-cell{text-align:center;vertical-align:center;}
             .tg .tg-first-column{font-weight:bold;text-align:left;vertical-align:center;}
+            .tg .tg-total-column{font-weight:bold;text-align:right;vertical-align:center;}            
             .tg img{width:32px;height:32px;}
         </style>
         </head>
@@ -21,7 +22,7 @@ class HtmlTable {
             this.contents += `<th class="tg-table-cell"><img src="{{${item.name}}}" alt="${item.description}"/></th>`;
         });
 
-        this.contents += '</tr></thead><tbody>';
+        this.contents += '<th class="tg-table-cell"></th></tr></thead><tbody>';
     }
 
     // Add User data row to the html
@@ -29,11 +30,12 @@ class HtmlTable {
         let rowContents = '<tr>';
         rowContents += `<td class="tg-first-column">${userName}</td>`;
 
-        awards.forEach(award => {
+        // Last element contains total score and is going to be in a separate style column
+        awards.slice(0, -1).forEach(award => {
             rowContents += `<td class="tg-table-cell">${award === 0 ? '' : award}</td>`;
         });
 
-        rowContents += '</tr>';
+        rowContents += `<td class="tg-total-column">${awards.pop()}</td></tr>`;
 
         this.contents += rowContents;
     };

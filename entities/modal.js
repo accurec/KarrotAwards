@@ -61,6 +61,51 @@ class Modal {
   }
 }
 
+const selectedUsersBlockId = 'user-select-block';
+const selectedAwardsBlockId = 'awards-select-block';
+
+class AwardsModalSubmissionPayload {
+  constructor(body, view) {
+      this.selectedUsers = view.state.values[selectedUsersBlockId]['user-select-action'].selected_users;
+      this.selectedAwards = view.state.values[selectedAwardsBlockId]['award-select-action'].selected_options.map(option => { return { text: option.text.text.split(' ').slice(0, -1).join(' '), emoji: option.text.text.split(' ').pop(), id: option.value.split('-').pop() }; });
+      this.attachmentText = view.state.values['attachment-text-input-block']['text-input-action'].value;
+      this.channelId = JSON.parse(view.private_metadata).channelId;
+      this.userId = body['user']['id'];
+  }
+}
+
+class ModalHelper {
+  static generateAwardsModal(channelId, awards) {
+    const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ channelId: channelId }));
+    modal.multi_user_selection(selectedUsersBlockId, 'Who is the lucky person?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users`, 'user-select-action', false);
+    modal.multi_items_selection(selectedAwardsBlockId, 'What award are they getting?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards`, 'award-select-action', awards, false);
+    modal.text_input('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);
+
+    return modal;
+  }
+
+  /**
+   * Function to validate user input provided through the modal. It contains custom validations that were not included in the default modal input fields behavior.
+   * @param {AwardsModalSubmissionPayload} awardsModalSubmissionPayload Object containing relevant data about user input in the awards modal.
+   */
+  static validateModalSubmissionPayload(awardsModalSubmissionPayload) {
+    const errors = {};
+
+    if (awardsModalSubmissionPayload.selectedUsers.includes(awardsModalSubmissionPayload.userId)) {
+      errors[selectedUsersBlockId] = 'Sorry, please remove yourself from the list :)';
+    }
+    else if (Object.entries(awardsModalSubmissionPayload.selectedUsers).length > process.env.MAX_NUMBER_OF_SELECTED_USERS) {
+      errors[selectedUsersBlockId] = `Maximum number of users to select is ${process.env.MAX_NUMBER_OF_SELECTED_USERS}.`;
+    }
+
+    if (Object.entries(awardsModalSubmissionPayload.selectedAwards).length > process.env.MAX_NUMBER_OF_SELECTED_AWARDS) {
+      errors[selectedAwardsBlockId] = `Maximum number of awards to select is ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS}.`;
+    }
+
+    return errors;
+  }
+}
+
 module.exports = {
-  Modal
+  ModalHelper, AwardsModalSubmissionPayload
 };

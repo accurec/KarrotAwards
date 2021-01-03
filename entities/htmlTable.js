@@ -22,7 +22,7 @@ class HtmlTable {
             this.contents += `<th class="tg-table-cell"><img src="{{${item.name}}}" alt="${item.description}"/></th>`;
         });
 
-        this.contents += '<th class="tg-table-cell"></th></tr></thead><tbody>';
+        this.contents += '<th class="tg-total-column">Score</th></tr></thead><tbody>';
     }
 
     // Add User data row to the html
@@ -46,6 +46,16 @@ class HtmlTable {
     };
 }
 
+class HtmlTableHelper {
+    static generateHTMLTable(awards, userStats) {
+        const htmlTable = new HtmlTable(awards.map(award => { return { name: award._id, description: award.userText } }));
+        userStats.forEach(userStat => { htmlTable.add_row(userStat.display_name, userStat.awardsCount) });
+        htmlTable.complete();
+
+        return htmlTable;
+    }
+}
+
 module.exports = {
-    HtmlTable
+    HtmlTableHelper
 };

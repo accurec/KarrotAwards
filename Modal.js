@@ -9,7 +9,7 @@ class Modal {
     this.blocks = [];
   }
 
-  multi_user_selection(blockId, labelText, placeholderText, actionId, optional) {
+  multiUserSelection(blockId, labelText, placeholderText, actionId, optional) {
     this.blocks.push({
       type: "input",
       block_id: blockId,
@@ -29,7 +29,7 @@ class Modal {
     })
   };
 
-  multi_items_selection(blockId, labelText, placeholderText, actionId, items, optional) {
+  multiItemsSelection(blockId, labelText, placeholderText, actionId, items, optional) {
     this.blocks.push({
       type: "input",
       block_id: blockId,
@@ -50,7 +50,7 @@ class Modal {
     })
   };
 
-  text_input(label_text, action_id, blockId, optional) {
+  textInput(label_text, action_id, blockId, optional) {
     this.blocks.push({
       type: 'input',
       block_id: blockId,
@@ -77,9 +77,9 @@ class AwardsModalSubmissionPayload {
 class ModalHelper {
   static generateAwardsModal(channelId, awards) {
     const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ channelId: channelId }));
-    modal.multi_user_selection(selectedUsersBlockId, 'Who is the lucky person?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users`, 'user-select-action', false);
-    modal.multi_items_selection(selectedAwardsBlockId, 'What award are they getting?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards`, 'award-select-action', awards, false);
-    modal.text_input('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);
+    modal.multiUserSelection(selectedUsersBlockId, 'Who is the lucky person?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users`, 'user-select-action', false);
+    modal.multiItemsSelection(selectedAwardsBlockId, 'What award are they getting?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards`, 'award-select-action', awards, false);
+    modal.textInput('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);
 
     return modal;
   }

@@ -26,7 +26,7 @@ class HtmlTable {
     }
 
     // Add User data row to the html
-    add_row(userName, awards) {
+    addRow(userName, awards) {
         let rowContents = '<tr>';
         rowContents += `<td class="tg-first-column">${userName}</td>`;
 
@@ -49,7 +49,7 @@ class HtmlTable {
 class HtmlTableHelper {
     static generateHTMLTable(awards, userStats) {
         const htmlTable = new HtmlTable(awards.map(award => { return { name: award._id, description: award.userText } }));
-        userStats.forEach(userStat => { htmlTable.add_row(userStat.display_name, userStat.awardsCount) });
+        userStats.forEach(userStat => { htmlTable.addRow(userStat.displayName, userStat.awardsCount) });
         htmlTable.complete();
 
         return htmlTable;

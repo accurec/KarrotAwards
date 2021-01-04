@@ -338,24 +338,26 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
   // As per spec, acknowledge first
   await ack();
 
+  const requester = `${body.user_id}:${body.user_name}`;
+
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
-    console.log(`Got help request from [${body.user_id}:${body.user_name}]`);
+    console.log(`Got help request from [${requester}].`);
     await handleHelpCommand(client, body.user_id, body.channel_id);
   }
   // Main flow to give someone an award
   else if (body.text.trim() === '') {
-    console.log(`Got award request from [${body.user_id}:${body.user_name}]`);
+    console.log(`Got award request from [${requester}].`);
     await handleAwardRequestCommand(client, body.user_id, body.channel_id, body.trigger_id);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel. Show top env.LEADERBOARD_NUMBER_OF_USERS users
   else if (body.text.toLowerCase().trim() === 'leaderboard') {
-    console.log(`Got leaderboard request from [${body.user_id}:${body.user_name}]`);
+    console.log(`Got leaderboard request from [${requester}].`);
     await handleLeaderboardCommand(client, body.user_id, body.channel_id, body.trigger_id);
   }
   // Flow to show stats for just one user specified in the request
   else if (body.text.toLowerCase().includes('scorecard')) {
-    console.log(`Got scorecard request from [${body.user_id}:${body.user_name}]`);
+    console.log(`Got scorecard request from [${requester}].`);
     await handleScorecardCommand(client, body.text, body.user_id, body.channel_id);
   }
 });

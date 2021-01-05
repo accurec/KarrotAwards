@@ -2,6 +2,7 @@
 // TODO: create proper summaries and annotations for functions/classes
 // TODO: Add proper logging for all outgoing/incoming requests/results with DateTime stamps
 // TODO: Add throtthling, so that users don't DDOS /karrotawards leaderboard or /karrotawards scorecard @user
+// TODO: In case there was an error that the app is not in the channel need to notify the user abouit it - this seems to be only needed for leaderboard image upload
 
 require('dotenv').config();
 const got = require('got');
@@ -155,6 +156,9 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
     return;
   }
 
+  // Sort the list so that the awards always show up in the same order - for consistent user experience
+  awards.sort((a, b) => b.weight - a.weight || a.text.localeCompare(b.text));
+
   // Generate awards array that matches the order of the awards array. Also calculate total score for each user
   userStats.forEach(userStat => {
     userStat['awardsCount'] = [];
@@ -207,7 +211,9 @@ async function handleHelpCommand(client, userId, channelId) {
           elements: [
             {
               type: 'mrkdwn',
-              text: `To give someone one or multiple awards you can use \`/karrotawards\`.\nTo see the leaderboard you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers!\nTo see which awards certain user currently have you can use \`/karrotawards scorecard @someone\`. Note that if you mention multiple users, only the first one mentioned will be displayed.`
+              text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:\n' +
+                `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!\n` +
+                '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
             }
           ]
         }
@@ -244,9 +250,10 @@ async function handleAwardRequestCommand(client, userId, channelId, triggerId) {
   }
 
   try {
+    // Sort the awards list so that the awards always show up in the same order - for consistent user experience
     await client.views.open({
       trigger_id: triggerId,
-      view: ModalHelper.generateAwardsModal(channelId, dbAwards.map(dbAward => { return { text: `${dbAward.userText} ${dbAward.text}`, value: `award-select-value-${dbAward._id}` }; }))
+      view: ModalHelper.generateAwardsModal(channelId, dbAwards.sort((a, b) => b.weight - a.weight || a.text.localeCompare(b.text)).map(dbAward => { return { text: `${dbAward.userText} ${dbAward.text}`, value: `award-select-value-${dbAward._id}` }; }))
     });
   }
   catch (error) {
@@ -270,7 +277,7 @@ async function handleLeaderboardCommand(client, userId, channelId) {
     }
     catch (error) {
       console.error(`There was an error handling leaderboard command. ${error}`);
-      await sendEphemeralToUser(client, userId, channelId, userErrorMessage);  
+      await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
     }
   }
 }
@@ -328,7 +335,7 @@ async function handleScorecardCommand(client, commandText, userId, channelId) {
       }
       catch (error) {
         console.error(`There was an error handling scorecard command. ${error}`);
-        await sendEphemeralToUser(client, userId, channelId, userErrorMessage);        
+        await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
       }
     }
   }

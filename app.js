@@ -3,6 +3,7 @@
 // TODO: Add proper logging for all outgoing/incoming requests/results with DateTime stamps
 // TODO: Add throtthling, so that users don't DDOS /karrotawards leaderboard or /karrotawards scorecard @user
 // TODO: In case there was an error that the app is not in the channel need to notify the user abouit it - this seems to be only needed for leaderboard image upload
+// TODO: Remove working on it messages once the result is uploaded
 
 require('dotenv').config();
 const got = require('got');

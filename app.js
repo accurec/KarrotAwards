@@ -1,9 +1,11 @@
 // TODO: Add logging to file
-// TODO: create proper summaries and annotations for functions/classes
 // TODO: Add proper logging for all outgoing/incoming requests/results with DateTime stamps
-// TODO: Add throtthling, so that users don't DDOS /karrotawards leaderboard or /karrotawards scorecard @user
-// TODO: In case there was an error that the app is not in the channel need to notify the user abouit it - this seems to be only needed for leaderboard image upload
-// TODO: Remove working on it messages once the result is uploaded
+
+// TODO: Use OpenAI API GPT3 to generate messages instead of having them in the DB. Or maybe even mix both? Need to do some research. https://beta.openai.com/ 
+// TODO: For leaderboard also have different random messages like we have for the award announcements.
+// TODO: Add logic so that users don't DDOS /karrotawards leaderboard or /karrotawards scorecard @user or even just /karrotawards?
+// TODO: Instead of using uDrop service to host images, better option would be Amazon S3? https://devcenter.heroku.com/articles/s3-upload-node
+// TODO: Make this app deployable to Heroku platform.
 
 require('dotenv').config();
 const got = require('got');
@@ -11,17 +13,16 @@ const nodeHtmlToImage = require('node-html-to-image');
 const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
 const { MongoClient, ObjectId } = require("mongodb");
-const { App } = require("@slack/bolt");
+const { App, RespondFn } = require("@slack/bolt");
 const { WebClient, LogLevel } = require("@slack/web-api");
 const { ModalHelper, AwardsModalSubmissionPayload } = require("./Modal.js");
 const { HtmlTableHelper } = require('./HtmlTable.js');
 
 const mongoDbUri = `mongodb+srv://${process.env.MONGODB_USER_NAME}:${process.env.MONGODB_USER_PASSWORD}@${process.env.MONGODB_CLUSTER_URL}/${process.env.MONGODB_NAME}?retryWrites=true&w=majority`;
 const uDropBaseUrl = 'https://www.udrop.com/';
-const userErrorMessage = 'Something went wrong :cry: Please try again later :rewind:';
-const workingOnItMessage = ':man-biking: Working on it, please wait. :woman-biking:';
-const attachmentsColor = '#0015ff';
 const defaultMessageTemplate = '{sender} said "{attachmentText}" and awarded {receiver} with {award}.';
+const userWorkingOnItMessage = ':man-biking: Working on it, please wait. :woman-biking:';
+const userErrorMessage = 'Something went wrong :cry: Please try again later and/or contact Administrator :rewind:';
 
 // Initialize the Bolt app with bot token and signing secret.
 const app = new App({
@@ -32,43 +33,30 @@ const app = new App({
 
 /**
  * Function to instantiate the new client for Atlas MongoDB to access data in it.
- * @param {String} uri Uri connection string for the Atlas MongoDB.
+ * @return {MongoClient} MongoDB client instance.
  */
-function createMongoClient(uri) {
+function createMongoDBClient() {
   try {
-    return new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    return new MongoClient(mongoDbUri, { useNewUrlParser: true, useUnifiedTopology: true });
   }
   catch (error) {
-    console.error(`There was an error creating mongo client for uri [${uri}]. ${error}`);
+    console.error(`There was an error creating mongo client for uri [${mongoDbUri}]. ${error}`);
   }
 }
 
 /**
- * Function to send ephemeral message to the user.
- * @param {WebClient} client Slack Bolt WebClient that allows to use Slack WebApi methods.
- * @param {String} userId Slack user identifier.
- * @param {String} channelId Slack channel identifier.
- * @param {String} text Text that will be sent to the user.
- * @param {String} attachments Attachments that are going to be sent along with the text to the user.
+ * Function to generate HTML table image with user score and awards.
+ * @param {WebClient} client Slack WebApi client to make calls to get some additional info.
+ * @param {String} targetUserId User id for which we need to generate scorecard image. If set to null then will do top X users as defined in config
+ * @return {Promise<Buffer>} Image buffer data.
  */
-async function sendEphemeralToUser(client, userId, channelId, text, attachments = null) {
-  try {
-    await client.chat.postEphemeral({
-      text: text,
-      user: userId,
-      channel: channelId,
-      attachments: attachments
-    });
-  }
-  catch (error) {
-    console.error(`There was an error sending ephemeral message to user [${userId}] in channel [${channelId}]. ${error}`);
-  }
-}
+async function generateScorecardImage(client, targetUserId = null) {
+  const mongoClient = createMongoDBClient();
 
-async function generateScorecardImage(client, userId, channelId, targetUserId = null) {
-  await sendEphemeralToUser(client, userId, channelId, workingOnItMessage);
+  if (mongoClient == null) {
+    return;
+  }
 
-  const mongoClient = createMongoClient(mongoDbUri);
   let userStats = [];
   let awards = [];
 
@@ -90,7 +78,6 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
   }
   catch (error) {
     console.error(`There was an error getting user stats and/or awards from the DB while trying to generate scorecard image. ${error}`);
-    await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
     return;
   }
   finally {
@@ -111,11 +98,6 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
     }
   }));
 
-  if (Object.entries(userStats).length === 0) {
-    await sendEphemeralToUser(client, userId, channelId, 'Sorry, I don\'t have any data for that yet :cry:');
-    return;
-  }
-
   // Get all custom emojis from Slack
   let slackEmojisLinks = {};
 
@@ -124,7 +106,6 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
   }
   catch (error) {
     console.error(`There was an error getting custom emojis list from Slack. ${error}`);
-    await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
     return;
   }
 
@@ -153,7 +134,7 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
   }));
 
   if (Object.entries(awards).length === 0) {
-    await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
+    console.error('Somehow ended up not having any awards in the list :(');
     return;
   }
 
@@ -180,57 +161,123 @@ async function generateScorecardImage(client, userId, channelId, targetUserId = 
     userStat.awardsCount.push(totalUserScore);
   });
 
-  // Generate HTML, image for the top LEADERBOARD_NUMBER_OF_USERS
-  const scorecardImage = await nodeHtmlToImage({
-    html: HtmlTableHelper.generateHTMLTable(awards, (targetUserId == null ? userStats.sort((a, b) => b.awardsCount.slice(-1) - a.awardsCount.slice(-1)).slice(0, process.env.LEADERBOARD_NUMBER_OF_USERS) : userStats)).contents,
-    content: awards.reduce((current, award) => {
-      current[award._id] = `data:image/jpeg;base64,${award.urlContents.toString('base64')}`;
-      return current;
-    }, {}), // TODO: image/jpeg seems to be working fine for all original formats such as png, gif, jpeg, jpg. Not sure if I need to bother converting it according to the original extension 
-    beforeScreenshot: async (page) => {
-      const tableSize = await page.$eval('#mainTable', el => [el.clientWidth, el.clientHeight]);
-      await page.addStyleTag({ content: `body {width:${tableSize[0]}px;height:${tableSize[1]}px;}` }) // This is needed so that the screenshot is properly sized to the size of the table
+  try {
+    // Generate HTML, image for the top LEADERBOARD_NUMBER_OF_USERS
+    const scorecardImage = await nodeHtmlToImage({
+      html: HtmlTableHelper.generateHTMLTable(awards, (targetUserId == null ? userStats.sort((a, b) => b.awardsCount.slice(-1) - a.awardsCount.slice(-1)).slice(0, process.env.LEADERBOARD_NUMBER_OF_USERS) : userStats)).contents,
+      content: awards.reduce((current, award) => {
+        current[award._id] = `data:image/jpeg;base64,${award.urlContents.toString('base64')}`;
+        return current;
+      }, {}), // TODO: image/jpeg seems to be working fine for all original formats such as png, gif, jpeg, jpg. Not sure if I need to bother converting it according to the original extension 
+      beforeScreenshot: async (page) => {
+        const tableSize = await page.$eval('#mainTable', el => [el.clientWidth, el.clientHeight]);
+        await page.addStyleTag({ content: `body {width:${tableSize[0]}px;height:${tableSize[1]}px;}` }) // This is needed so that the screenshot is properly sized to the size of the table
+      }
+    });
+
+    return scorecardImage;
+  }
+  catch (error) {
+    console.error(`There was an error in the last step of generating the image. ${error}`);
+    return;
+  }
+}
+
+/**
+ * Function to upload image to uDrop server and return url for its location.
+ * @param {Buffer} image Image buffer that will be used to upload to uDrop server.
+ * @return {Promise<String>} uDrop external url for the image.
+ */
+async function uploadImageToUDrop(image) {
+  try {
+    const authFormData = new FormData();
+    authFormData.append('key1', process.env.UDROP_KEY1);
+    authFormData.append('key2', process.env.UDROP_KEY2);
+
+    const authResult = await got.post(`${uDropBaseUrl}api/v2/authorize`, { responseType: 'json', resolveBodyOnly: true, body: authFormData });
+
+    if (authResult._status.toLowerCase() === 'success') {
+      const imageUploadFormData = new FormData();
+      imageUploadFormData.append('access_token', authResult.data.access_token);
+      imageUploadFormData.append('account_id', authResult.data.account_id);
+      imageUploadFormData.append('upload_file', image, { filename: `${uuidv4()}.jpg` });
+
+      const imageUploadResult = await got.post(`${uDropBaseUrl}api/v2/file/upload`, { responseType: 'json', resolveBodyOnly: true, body: imageUploadFormData });
+
+      if (imageUploadResult._status.toLowerCase() === 'success') {
+        return imageUploadResult.data[0].url.replace(uDropBaseUrl, `${uDropBaseUrl}file/`);
+      }
+      else {
+        throw (imageUploadResult.response);
+      }
     }
-  });
-
-  return scorecardImage;
+    else {
+      throw (authResult.response);
+    }
+  }
+  catch (error) {
+    console.error(`There was an error uploading image to uDrop. ${error}`);
+  }
 }
 
 /**
- * Function to notify a user about what kind of commands can be invoked for this application.
- * @param {WebClient} client Bolt web client that is going to be used to send ephemeral message using Slack API.
- * @param {String} userId User id to which the message should be sent.
- * @param {String} channelId Channel id where the message will be shown.
+ * Function to send back help message.
+ * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
-async function handleHelpCommand(client, userId, channelId) {
-  await sendEphemeralToUser(client, userId, channelId, 'How to use KarrotAwards:',
-    [{
-      color: attachmentsColor,
-      blocks: [
-        {
-          type: 'context',
-          elements: [
-            {
-              type: 'mrkdwn',
-              text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:\n' +
-                `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!\n` +
-                '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
+async function handleHelpCommand(respond) {
+  await respond({
+    attachments: [
+      {
+        color: '#de5c00',
+        blocks: [
+          {
+            type: 'header',
+            text: {
+              type: 'plain_text',
+              text: 'Help:'
             }
-          ]
-        }
-      ]
-    }]);
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:'
+            }
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!`
+            }
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
+            }
+          }
+        ]
+      }]
+  });
 }
 
 /**
- * Function get rewards data from the DB and send modal to the user.
- * @param {WebClient} client Bolt web client that is going to be used to send ephemeral message using Slack API in case something goes wrong and we need to notify user about it.
- * @param {String} userId User id to which the message should be sent.
- * @param {String} channelId Channel id where the message will be shown.
- * @param {String} triggerId In case everything is fine and the modal is ready, trigger id is needed to send the modal to the user.
+ * Function get awards data from the DB and open the modal for the user.
+ * @param {WebClient} client Slack WebApi client that is going to be used to open modal.
+ * @param {String} responseUrl This will be included in the modal metadata so that when user submits it we can post message to where it originated from.
+ * @param {String} triggerId In case everything is fine and the modal is ready, trigger id is needed to open the modal for the user.
+ * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
-async function handleAwardRequestCommand(client, userId, channelId, triggerId) {
-  const mongoClient = createMongoClient(mongoDbUri);
+async function handleAwardRequestCommand(client, responseUrl, triggerId, respond) {
+  const mongoClient = createMongoDBClient();
+
+  if (mongoClient == null) {
+    await respond(userErrorMessage);
+    return;
+  }
+
   let dbAwards = [];
 
   try {
@@ -243,7 +290,7 @@ async function handleAwardRequestCommand(client, userId, channelId, triggerId) {
   }
   catch (error) {
     console.error(`There was an error getting awards from the DB. ${error}`);
-    await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
+    await respond(userErrorMessage);
     return;
   }
   finally {
@@ -254,95 +301,120 @@ async function handleAwardRequestCommand(client, userId, channelId, triggerId) {
     // Sort the awards list so that the awards always show up in the same order - for consistent user experience
     await client.views.open({
       trigger_id: triggerId,
-      view: ModalHelper.generateAwardsModal(channelId, dbAwards.sort((a, b) => b.weight - a.weight || a.text.localeCompare(b.text)).map(dbAward => { return { text: `${dbAward.userText} ${dbAward.text}`, value: `award-select-value-${dbAward._id}` }; }))
+      view: ModalHelper.generateAwardsModal(responseUrl, dbAwards.sort((a, b) => b.weight - a.weight || a.text.localeCompare(b.text)).map(dbAward => { return { text: `${dbAward.userText} ${dbAward.text}`, value: `award-select-value-${dbAward._id}` }; }))
     });
   }
   catch (error) {
     console.error(`There was an error creating the modal and sending it to the user. ${error}`);
-    await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
+    await respond(userErrorMessage);
   }
 }
 
-async function handleLeaderboardCommand(client, userId, channelId) {
-  const scorecardImage = await generateScorecardImage(client, userId, channelId);
+/**
+ * Function to generate and upload image with leaderboard, then send the message to the channel.
+ * @param {String} userId User on whos request command is being executed.
+ * @param {WebClient} client Slack WebApi client to make calls to get some additional info.
+ * @param {RespondFn} respond Slack API respond function attached to the current context.
+ */
+async function handleLeaderboardCommand(userId, client, respond) {
+  await respond(userWorkingOnItMessage);
 
-  if (scorecardImage != null) {
-    try {
-      await client.files.upload({
-        file: scorecardImage,
-        iletype: 'binary',
-        channels: channelId,
-        title: ':arrow_down:',
-        initial_comment: `:sunglasses: Requested by the fabulous <@${userId}>! :sunglasses:\n:fireworks: KarrotAwards Top ${process.env.LEADERBOARD_NUMBER_OF_USERS} Leaderboard! :fireworks:`
-      });
-    }
-    catch (error) {
-      console.error(`There was an error handling leaderboard command. ${error}`);
-      await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
-    }
+  const scorecardImage = await generateScorecardImage(client);
+
+  if (scorecardImage == null) {
+    await respond(userErrorMessage);
+    return;
+  }
+
+  const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
+
+  if (imageUDropUrl == null) {
+    await respond(userErrorMessage);
+    return;
+  }
+
+  try {
+    await respond({
+      response_type: 'in_channel',
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `:sunglasses: *Requested by the fabulous <@${userId}>! KarrotAwards "Top ${process.env.LEADERBOARD_NUMBER_OF_USERS}" leaderboard!* :fireworks:`
+          }
+        },
+        {
+          type: 'image',
+          image_url: imageUDropUrl,
+          alt_text: 'Leaderboard image'
+        }
+      ]
+    });
+  }
+  catch (error) {
+    console.error(`There was an error sending leaderboard message. ${error}`);
+    await respond(userErrorMessage);
   }
 }
 
-async function handleScorecardCommand(client, commandText, userId, channelId) {
+/**
+ * Function to generate and upload image with scorecard for a specofoc user, then send the message to requester as ephemeral.
+ * @param {WebClient} client Slack WebApi client to make calls to get some additional info.
+ * @param {String} commandText Text of the command - to get user id from it to generate scorecard for it.
+ * @param {RespondFn} respond Slack API respond function attached to the current context.
+ */
+async function handleScorecardCommand(client, commandText, respond) {
   // Parse message and get Id of the first user encountered
   let userIdToShow = (commandText.match(/<@[\d\w]+\|/g) || []).pop();
 
   if (userIdToShow == null) {
-    await sendEphemeralToUser(client, userId, channelId, 'You didn\'t specify which user scorecard you would like to see. Please try again.');
+    await respond('You didn\'t specify which user scorecard you would like to see. Please try again.');
   }
   else {
+    await respond(userWorkingOnItMessage);
+
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
+    const scorecardImage = await generateScorecardImage(client, userIdToShow);
 
-    const scorecardImage = await generateScorecardImage(client, userId, channelId, userIdToShow);
+    if (scorecardImage == null) {
+      respond(userErrorMessage);
+      return;
+    }
 
-    // Upload image to uDrop to be able to then use the url for it in the ephemeral message for the user
-    if (scorecardImage != null) {
-      try {
-        const authFormData = new FormData();
-        authFormData.append('key1', process.env.UDROP_KEY1);
-        authFormData.append('key2', process.env.UDROP_KEY2);
+    const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
 
-        const authResult = await got.post(`${uDropBaseUrl}api/v2/authorize`, { responseType: 'json', resolveBodyOnly: true, body: authFormData });
+    if (imageUDropUrl == null) {
+      respond(userErrorMessage);
+      return;
+    }
 
-        if (authResult._status.toLowerCase() === 'success') {
-          const imageUploadFormData = new FormData();
-          imageUploadFormData.append('access_token', authResult.data.access_token);
-          imageUploadFormData.append('account_id', authResult.data.account_id);
-          imageUploadFormData.append('upload_file', scorecardImage, { filename: `${uuidv4()}.jpg` });
-
-          const imageUploadResult = await got.post(`${uDropBaseUrl}api/v2/file/upload`, { responseType: 'json', resolveBodyOnly: true, body: imageUploadFormData });
-
-          if (imageUploadResult._status.toLowerCase() === 'success') {
-            // Send ephemeral to user
-            await sendEphemeralToUser(client, userId, channelId, `Scorecard for <@${userIdToShow}>! :sunglasses:`,
-              [{
-                color: attachmentsColor,
-                blocks: [
-                  {
-                    type: 'image',
-                    image_url: imageUploadResult.data[0].url.replace(uDropBaseUrl, `${uDropBaseUrl}file/`), // Quick and dirty way to get direct link since uDrop doesn't return direct links in response :(
-                    alt_text: 'Scorecard image'
-                  }
-                ]
-              }]);
+    try {
+      await respond({
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*Scorecard for <@${userIdToShow}>!* :sunglasses:`
+            }
+          },
+          {
+            type: 'image',
+            image_url: imageUDropUrl,
+            alt_text: 'Scorecard image'
           }
-          else {
-            throw ('uDrop image upload was not successful.');
-          }
-        }
-        else {
-          throw ('uDrop auth was not successful.');
-        }
-      }
-      catch (error) {
-        console.error(`There was an error handling scorecard command. ${error}`);
-        await sendEphemeralToUser(client, userId, channelId, userErrorMessage);
-      }
+        ]
+      });
+    }
+    catch (error) {
+      console.error(`There was an error sending scorecard message. ${error}`);
+      await respond(userErrorMessage);
     }
   }
 }
 
-app.command('/karrotawards', async ({ ack, body, client }) => {
+app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   // As per spec, acknowledge first
   await ack();
 
@@ -351,26 +423,26 @@ app.command('/karrotawards', async ({ ack, body, client }) => {
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
     console.log(`Got help request from [${requester}].`);
-    await handleHelpCommand(client, body.user_id, body.channel_id);
+    await handleHelpCommand(respond);
   }
   // Main flow to give someone an award
   else if (body.text.trim() === '') {
     console.log(`Got award request from [${requester}].`);
-    await handleAwardRequestCommand(client, body.user_id, body.channel_id, body.trigger_id);
+    await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel. Show top env.LEADERBOARD_NUMBER_OF_USERS users
   else if (body.text.toLowerCase().trim() === 'leaderboard') {
     console.log(`Got leaderboard request from [${requester}].`);
-    await handleLeaderboardCommand(client, body.user_id, body.channel_id, body.trigger_id);
+    await handleLeaderboardCommand(body.user_id, client, respond);
   }
   // Flow to show stats for just one user specified in the request
   else if (body.text.toLowerCase().includes('scorecard')) {
     console.log(`Got scorecard request from [${requester}].`);
-    await handleScorecardCommand(client, body.text, body.user_id, body.channel_id);
+    await handleScorecardCommand(client, body.text, respond);
   }
 });
 
-app.view('modal_submission', async ({ ack, body, view, client }) => {
+app.view('modal_submission', async ({ ack, body, view }) => {
   const viewSubmissionPayload = new AwardsModalSubmissionPayload(body, view);
   const errors = ModalHelper.validateModalSubmissionPayload(viewSubmissionPayload);
 
@@ -386,9 +458,15 @@ app.view('modal_submission', async ({ ack, body, view, client }) => {
     await ack();
   }
 
-  await sendEphemeralToUser(client, viewSubmissionPayload.userId, viewSubmissionPayload.channelId, workingOnItMessage);
+  await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) });
 
-  const mongoClient = createMongoClient(mongoDbUri);
+  const mongoClient = createMongoDBClient();
+
+  if (mongoClient == null) {
+    await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
+    return;
+  }
+
   let message = '';
 
   try {
@@ -440,7 +518,7 @@ app.view('modal_submission', async ({ ack, body, view, client }) => {
   }
   catch (error) {
     console.error(`There was an error updating scorecards or getting message template from the DB. ${error}`);
-    await sendEphemeralToUser(client, viewSubmissionPayload.userId, viewSubmissionPayload.channelId, userErrorMessage);
+    await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
     return;
   }
   finally {
@@ -450,18 +528,22 @@ app.view('modal_submission', async ({ ack, body, view, client }) => {
   // Finally after we saved the scorecards and got the message template, we can now update it with the values we got from submission and send that to the channel
   try {
     message = message.replace(/{sender}/gi, `<@${viewSubmissionPayload.userId}>`)
-      .replace(/{receiver}/gi, viewSubmissionPayload.selectedUsers.map(user => { return `<@${user}>`; }).toString().replace(/,/gi, ', ')).replace(/,\s([^,]+)$/, ' and $1')
-      .replace(/{award}/gi, viewSubmissionPayload.selectedAwards.map(award => { return award['emoji']; }).toString().replace(/,/gi, ', ')).replace(/,\s([^,]+)$/, ' and $1')
+      .replace(/{receiver}/gi, viewSubmissionPayload.selectedUsers.map(user => { return `<@${user}>`; }).toString().replace(/,/gi, ', ').replace(/,\s([^,]+)$/, ' and $1'))
+      .replace(/{award}/gi, viewSubmissionPayload.selectedAwards.map(award => { return award['emoji']; }).toString().replace(/,/gi, ', ').replace(/,\s([^,]+)$/, ' and $1'))
       .replace(/{attachmentText}/gi, viewSubmissionPayload.attachmentText == null ? '' : viewSubmissionPayload.attachmentText);
 
-    await client.chat.postMessage({
-      channel: viewSubmissionPayload.channelId,
-      text: message
+    await got.post(viewSubmissionPayload.responseUrl, {
+      body: JSON.stringify({
+        replace_original: true,
+        delete_original: true,
+        response_type: 'in_channel',
+        text: `*${message}*`
+      })
     });
   }
   catch (error) {
     console.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);
-    await sendEphemeralToUser(client, viewSubmissionPayload.userId, viewSubmissionPayload.channelId, userErrorMessage);
+    await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
   }
 });
 

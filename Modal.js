@@ -1,3 +1,10 @@
+// Const values that are used for modal generation and also validation response.
+const selectedUsersBlockId = 'user-select-block';
+const selectedAwardsBlockId = 'awards-select-block';
+
+/**
+ * Wrapper class to generate elements for Slack modal and modal itself.
+ */
 class Modal {
   constructor(titleText, submitText, cancelText, privateMetadata) {
     this.type = 'modal';
@@ -61,22 +68,30 @@ class Modal {
   }
 }
 
-const selectedUsersBlockId = 'user-select-block';
-const selectedAwardsBlockId = 'awards-select-block';
-
+/**
+ * Class to parse data from modal submission.
+ */
 class AwardsModalSubmissionPayload {
   constructor(body, view) {
       this.selectedUsers = view.state.values[selectedUsersBlockId]['user-select-action'].selected_users;
       this.selectedAwards = view.state.values[selectedAwardsBlockId]['award-select-action'].selected_options.map(option => { return { text: option.text.text.split(' ').slice(0, -1).join(' '), emoji: option.text.text.split(' ').pop(), id: option.value.split('-').pop() }; });
       this.attachmentText = view.state.values['attachment-text-input-block']['text-input-action'].value;
-      this.channelId = JSON.parse(view.private_metadata).channelId;
+      this.responseUrl = JSON.parse(view.private_metadata).responseUrl;
       this.userId = body['user']['id'];
   }
 }
 
+/**
+ * Class containing utility functions to deal with awards modal generation and submission data validation.
+ */
 class ModalHelper {
-  static generateAwardsModal(channelId, awards) {
-    const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ channelId: channelId }));
+  /**
+   * Function to generate modal object view to assign awards to users.
+   * @param {String} responseUrl Response url that is going to be carried in the modal private metadata and used to send announcemet message once the modal is submitted.
+   * @param {*} awards Object containing data about awards (emoji text, id, and user friendly text).
+   */
+  static generateAwardsModal(responseUrl, awards) {
+    const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ responseUrl: responseUrl }));
     modal.multiUserSelection(selectedUsersBlockId, 'Who is the lucky person?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users`, 'user-select-action', false);
     modal.multiItemsSelection(selectedAwardsBlockId, 'What award are they getting?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards`, 'award-select-action', awards, false);
     modal.textInput('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);

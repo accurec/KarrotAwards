@@ -555,7 +555,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
 // Main -> start the Bolt app.
 (async () => {
   await app.start(process.env.PORT);
-  console.info('KarrotAwards -> ⚡️ Bolt app started!');
+  console.info('KarrotAwards Bolt app started!');
 
   console.info(process.env.MONGODB_USER_NAME);
 })();

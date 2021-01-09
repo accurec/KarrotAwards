@@ -557,5 +557,5 @@ app.view('modal_submission', async ({ ack, body, view }) => {
 // Main -> start the Bolt app.
 (async () => {
   await app.start(process.env.PORT);
-  logger.info('KarrotAwards -> ⚡️ Bolt app started!');
+  logger.info('KarrotAwards Bolt app started!');
 })();

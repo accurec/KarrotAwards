@@ -37,6 +37,7 @@ const app = new App({
  */
 function createMongoDBClient() {
   try {
+    logger.info(mongoDbUri);
     return new MongoClient(mongoDbUri, { useNewUrlParser: true, useUnifiedTopology: true });
   }
   catch (error) {

@@ -92,8 +92,8 @@ class ModalHelper {
    */
   static generateAwardsModal(responseUrl, awards) {
     const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ responseUrl: responseUrl }));
-    modal.multiUserSelection(selectedUsersBlockId, 'Who is the lucky person?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users`, 'user-select-action', false);
-    modal.multiItemsSelection(selectedAwardsBlockId, 'What award are they getting?', `Select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards`, 'award-select-action', awards, false);
+    modal.multiUserSelection(selectedUsersBlockId, `Who is the lucky person? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_USERS})`, `Select user(s)`, 'user-select-action', false);
+    modal.multiItemsSelection(selectedAwardsBlockId, `What award are they getting? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS})`, `Select award(s)`, 'award-select-action', awards, false);
     modal.textInput('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);
 
     return modal;
@@ -110,11 +110,11 @@ class ModalHelper {
       errors[selectedUsersBlockId] = 'Sorry, please remove yourself from the list :)';
     }
     else if (Object.entries(awardsModalSubmissionPayload.selectedUsers).length > process.env.MAX_NUMBER_OF_SELECTED_USERS) {
-      errors[selectedUsersBlockId] = `Maximum number of users to select is ${process.env.MAX_NUMBER_OF_SELECTED_USERS}.`;
+      errors[selectedUsersBlockId] = `You can only select up to ${process.env.MAX_NUMBER_OF_SELECTED_USERS} users.`;
     }
 
     if (Object.entries(awardsModalSubmissionPayload.selectedAwards).length > process.env.MAX_NUMBER_OF_SELECTED_AWARDS) {
-      errors[selectedAwardsBlockId] = `Maximum number of awards to select is ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS}.`;
+      errors[selectedAwardsBlockId] = `You can only select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards.`;
     }
 
     return errors;

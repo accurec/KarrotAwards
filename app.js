@@ -3,11 +3,11 @@
 
 // TODO: Use OpenAI API GPT3 to generate messages instead of having them in the DB. Or maybe even mix both? Need to do some research. https://beta.openai.com/ 
 // TODO: For leaderboard also have different random messages like we have for the award announcements.
-// TODO: Add logic so that users don't DDOS /karrotawards leaderboard or /karrotawards scorecard @user or even just /karrotawards?
 // TODO: Instead of using uDrop service to host images, better option would be Amazon S3? https://devcenter.heroku.com/articles/s3-upload-node
 // TODO: Make this app deployable to Heroku platform.
 
 require('dotenv').config();
+const logger = require('./Logger');
 const got = require('got');
 const nodeHtmlToImage = require('node-html-to-image');
 const FormData = require('form-data');
@@ -15,8 +15,8 @@ const { v4: uuidv4 } = require('uuid');
 const { MongoClient, ObjectId } = require("mongodb");
 const { App, RespondFn } = require("@slack/bolt");
 const { WebClient, LogLevel } = require("@slack/web-api");
-const { ModalHelper, AwardsModalSubmissionPayload } = require("./Modal.js");
-const { HtmlTableHelper } = require('./HtmlTable.js');
+const { ModalHelper, AwardsModalSubmissionPayload } = require("./Modal");
+const { HtmlTableHelper } = require('./HtmlTable');
 
 const mongoDbUri = `mongodb+srv://${process.env.MONGODB_USER_NAME}:${process.env.MONGODB_USER_PASSWORD}@${process.env.MONGODB_CLUSTER_URL}/${process.env.MONGODB_NAME}?retryWrites=true&w=majority`;
 const uDropBaseUrl = 'https://www.udrop.com/';
@@ -40,7 +40,7 @@ function createMongoDBClient() {
     return new MongoClient(mongoDbUri, { useNewUrlParser: true, useUnifiedTopology: true });
   }
   catch (error) {
-    console.error(`There was an error creating mongo client for uri [${mongoDbUri}]. ${error}`);
+    logger.error(`There was an error creating mongo client for uri [${mongoDbUri}]. ${error}`);
   }
 }
 
@@ -77,7 +77,7 @@ async function generateScorecardImage(client, targetUserId = null) {
     awards = await mongoClient.db().collection("Awards").find().toArray();
   }
   catch (error) {
-    console.error(`There was an error getting user stats and/or awards from the DB while trying to generate scorecard image. ${error}`);
+    logger.error(`There was an error getting user stats and/or awards from the DB while trying to generate scorecard image. ${error}`);
     return;
   }
   finally {
@@ -94,7 +94,7 @@ async function generateScorecardImage(client, targetUserId = null) {
     }
     catch (error) {
       userStats = userStats.filter(stat => { return stat.userId !== userId });
-      console.error(`Failed to retrieve user [${userId}] profile. It was removed from the display list. ${error}`);
+      logger.error(`Failed to retrieve user [${userId}] profile. It was removed from the display list. ${error}`);
     }
   }));
 
@@ -105,7 +105,7 @@ async function generateScorecardImage(client, targetUserId = null) {
     slackEmojisLinks = (await client.emoji.list()).emoji;
   }
   catch (error) {
-    console.error(`There was an error getting custom emojis list from Slack. ${error}`);
+    logger.error(`There was an error getting custom emojis list from Slack. ${error}`);
     return;
   }
 
@@ -129,12 +129,12 @@ async function generateScorecardImage(client, targetUserId = null) {
     }
     catch (error) {
       awards = awards.filter(award => { return award.url !== currtentAward.url });
-      console.error(`There was an error downloading emoji url [${award.url}]. ${error.response.body}`);
+      logger.error(`There was an error downloading emoji url [${award.url}]. ${error.response.body}`);
     }
   }));
 
   if (Object.entries(awards).length === 0) {
-    console.error('Somehow ended up not having any awards in the list :(');
+    logger.error('Somehow ended up not having any awards in the list :(');
     return;
   }
 
@@ -178,7 +178,7 @@ async function generateScorecardImage(client, targetUserId = null) {
     return scorecardImage;
   }
   catch (error) {
-    console.error(`There was an error in the last step of generating the image. ${error}`);
+    logger.error(`There was an error in the last step of generating the image. ${error}`);
     return;
   }
 }
@@ -216,7 +216,7 @@ async function uploadImageToUDrop(image) {
     }
   }
   catch (error) {
-    console.error(`There was an error uploading image to uDrop. ${error}`);
+    logger.error(`There was an error uploading image to uDrop. ${error}`);
   }
 }
 
@@ -257,6 +257,13 @@ async function handleHelpCommand(respond) {
               type: 'mrkdwn',
               text: '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
             }
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `*P.S.* Are you a creative writer? :upside_down_face: You can contribute to this project! To get more details please feel free to contact \`${process.env.CONTRIBUTE_EMAIL_ADDR}\`! :slightly_smiling_face:`
+            }
           }
         ]
       }]
@@ -289,7 +296,7 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
     }
   }
   catch (error) {
-    console.error(`There was an error getting awards from the DB. ${error}`);
+    logger.error(`There was an error getting awards from the DB. ${error}`);
     await respond(userErrorMessage);
     return;
   }
@@ -305,7 +312,7 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
     });
   }
   catch (error) {
-    console.error(`There was an error creating the modal and sending it to the user. ${error}`);
+    logger.error(`There was an error creating the modal and sending it to the user. ${error}`);
     await respond(userErrorMessage);
   }
 }
@@ -353,7 +360,7 @@ async function handleLeaderboardCommand(userId, client, respond) {
     });
   }
   catch (error) {
-    console.error(`There was an error sending leaderboard message. ${error}`);
+    logger.error(`There was an error sending leaderboard message. ${error}`);
     await respond(userErrorMessage);
   }
 }
@@ -408,7 +415,7 @@ async function handleScorecardCommand(client, commandText, respond) {
       });
     }
     catch (error) {
-      console.error(`There was an error sending scorecard message. ${error}`);
+      logger.error(`There was an error sending scorecard message. ${error}`);
       await respond(userErrorMessage);
     }
   }
@@ -422,22 +429,22 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
 
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
-    console.log(`Got help request from [${requester}].`);
+    logger.info(`Got help request from [${requester}].`);
     await handleHelpCommand(respond);
   }
   // Main flow to give someone an award
   else if (body.text.trim() === '') {
-    console.log(`Got award request from [${requester}].`);
+    logger.info(`Got award request from [${requester}].`);
     await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel. Show top env.LEADERBOARD_NUMBER_OF_USERS users
   else if (body.text.toLowerCase().trim() === 'leaderboard') {
-    console.log(`Got leaderboard request from [${requester}].`);
+    logger.info(`Got leaderboard request from [${requester}].`);
     await handleLeaderboardCommand(body.user_id, client, respond);
   }
   // Flow to show stats for just one user specified in the request
   else if (body.text.toLowerCase().includes('scorecard')) {
-    console.log(`Got scorecard request from [${requester}].`);
+    logger.info(`Got scorecard request from [${requester}].`);
     await handleScorecardCommand(client, body.text, respond);
   }
 });
@@ -517,7 +524,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     }
   }
   catch (error) {
-    console.error(`There was an error updating scorecards or getting message template from the DB. ${error}`);
+    logger.error(`There was an error updating scorecards or getting message template from the DB. ${error}`);
     await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
     return;
   }
@@ -542,7 +549,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     });
   }
   catch (error) {
-    console.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);
+    logger.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);
     await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
   }
 });
@@ -550,5 +557,5 @@ app.view('modal_submission', async ({ ack, body, view }) => {
 // Main -> start the Bolt app.
 (async () => {
   await app.start(process.env.APP_PORT);
-  console.log('KarrotAwards -> ⚡️ Bolt app is running!');
+  logger.info('KarrotAwards -> ⚡️ Bolt app started!');
 })();

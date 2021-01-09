@@ -167,7 +167,8 @@ async function generateScorecardImage(client, targetUserId = null) {
       beforeScreenshot: async (page) => {
         const tableSize = await page.$eval('#mainTable', el => [el.clientWidth, el.clientHeight]);
         await page.addStyleTag({ content: `body {width:${tableSize[0]}px;height:${tableSize[1]}px;}` }) // This is needed so that the screenshot is properly sized to the size of the table
-      }
+      },
+      puppeteerArgs: { args: ["--no-sandbox"] }
     });
 
     return scorecardImage;

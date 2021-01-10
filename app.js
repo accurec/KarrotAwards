@@ -153,7 +153,7 @@ async function generateScorecardImage(client, targetUserId = null) {
       }
     });
 
-    userStat.awardsCount.push(totalUserScore);
+    userStat.awardsCount.push(totalUserScore.toFixed(3));
   });
 
   try {

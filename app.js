@@ -10,8 +10,8 @@ const { v4: uuidv4 } = require('uuid');
 const { MongoClient, ObjectId } = require("mongodb");
 const { App, RespondFn } = require("@slack/bolt");
 const { WebClient, LogLevel } = require("@slack/web-api");
-const { ModalHelper, AwardsModalSubmissionPayload } = require("./Helpers/Modal");
-const { HtmlTableHelper } = require('./Helpers/HtmlTable');
+const { ModalHelper, AwardsModalSubmissionPayload } = require("./helpers/modal");
+const { HtmlTableHelper } = require('./helpers/htmlTable');
 
 const mongoDbUri = `mongodb+srv://${process.env.MONGODB_USER_NAME}:${process.env.MONGODB_USER_PASSWORD}@${process.env.MONGODB_CLUSTER_URL}/${process.env.MONGODB_NAME}?retryWrites=true&w=majority`;
 const uDropBaseUrl = 'https://www.udrop.com/';

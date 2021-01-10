@@ -1,0 +1,13 @@
+[{"text":":karrotawards_facepalm:","userText":"Facepalm","weight":{"$numberInt":"-2"}},
+ {"text":":karrotawards_beer:","userText":"Beer","weight":{"$numberDouble":"0.5"}},
+ {"text":":karrotawards_bow_and_arrow:","userText":"Bow and arrow","weight":{"$numberInt":"-1"}},
+ {"text":":karrotawards_carrot:","userText":"Carrot","weight":{"$numberDouble":"2.35"}},
+ {"text":":karrotawards_plus_one:","userText":"Plus one","weight":{"$numberInt":"1"}},
+ {"text":":karrotawards_potato:","userText":"Potato","weight":{"$numberDouble":"1.8"}},
+ {"text":":karrotawards_redstar:","userText":"Red star","weight":{"$numberDouble":"1.75"}},
+ {"text":":karrotawards_spock_hand:","userText":"Vulkan salute","weight":{"$numberDouble":"3.75"}},
+ {"text":":karrotawards_star:","userText":"Star","weight":{"$numberInt":"1"}},
+ {"text":":karrotawards_star_2:","userText":"Big star","weight":{"$numberInt":"2"}},
+ {"text":":karrotawards_stars:","userText":"Many stars","weight":{"$numberInt":"3"}},
+ {"text":":karrotawards_sweet_potato:","userText":"Sweet potato","weight":{"$numberInt":"2"}},
+ {"text":":karrotawards_wine_glass:","userText":"Wine","weight":{"$numberDouble":"0.7"}}]

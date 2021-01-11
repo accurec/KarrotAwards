@@ -153,7 +153,7 @@ async function generateScorecardImage(client, targetUserId = null) {
       }
     });
 
-    userStat.awardsCount.push(totalUserScore.toFixed(3));
+    userStat.awardsCount.push(parseFloat(totalUserScore.toFixed(2))); // Either have 2 decimals if there is value, or none if number is integer
   });
 
   try {

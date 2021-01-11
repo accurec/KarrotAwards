@@ -321,7 +321,7 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
  */
 async function handleLeaderboardCommand(userId, client, respond) {
   // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setInterval(() => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+  var workingOnItMessageInterval = setInterval(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const scorecardImage = await generateScorecardImage(client);
 
@@ -380,7 +380,7 @@ async function handleScorecardCommand(client, commandText, respond) {
   }
   else {
     // Only display the message if operation takes longer than expected
-    var workingOnItMessageInterval = setInterval(() => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+    var workingOnItMessageInterval = setInterval(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
     const scorecardImage = await generateScorecardImage(client, userIdToShow);
@@ -470,7 +470,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
   }
 
   // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setInterval(() => { await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) }); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+  var workingOnItMessageInterval = setInterval(async () => { await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) }); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const mongoClient = createMongoDBClient();
 

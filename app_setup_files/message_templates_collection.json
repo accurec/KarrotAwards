@@ -15,4 +15,8 @@
  {"text":"\"Thank you, merci, grazie for all your hard work, and for {attachmentText}\" - and then {sender} showered {receiver} with a handful of {award}!"},
  {"text":"{receiver}, you play a very important role on this team! {sender} appreciates and admires your work and wanted to show their appreciation by awarding you {award} for \"{attachmentText}\"."},
  {"text":"Yo, heard {receiver} needed to be motivated. So {sender} sent {award} with some wise words on top of it: \"{attachmentText}\"."},
- {"text":"While the sun usually sets on the west, today {sender} decided to close the day by shining some light on {receiver} with perfectly looking {award} for their amazing contribution. \"{attachmentText}\" - were {sender} last words in regards to this occasion."}]
+ {"text":"While the sun usually sets on the west, today {sender} decided to close the day by shining some light on {receiver} with perfectly looking {award} for their amazing contribution. \"{attachmentText}\" - were {sender} last words in regards to this occasion."},
+ {"text":"It's that time of the week again! Time to be a hero and rescue {receiver} from the abyss of this week. {sender} is sending {award} and some final words of greatness: \"{attachmentText}\"."},
+ {"text":"Hey {receiver}, you can do it! {sender} believes that you're doing great work and awards you with {award} and their very important message: \"{attachmentText}\"."},
+ {"text":"Oh mighty warrior, {receiver}, you've freed us from the invincible dragon, Virus 2.0. The legendary wizard, {sender} bestows upon you the honorary {award} and pronounces: \"{attachmentText}\"."},
+ {"text":"May we all imagine our future ... enjoying a bowl of chips with {receiver}. Here's the dip {award} to go with it. {sender} can't wait to party and cried out loud \"{attachmentText}\"."}]

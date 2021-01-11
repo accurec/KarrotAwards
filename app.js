@@ -320,7 +320,8 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
 async function handleLeaderboardCommand(userId, client, respond) {
-  await respond(userWorkingOnItMessage);
+  // Only display the message if operation takes longer than expected
+  var workingOnItMessageInterval = setInterval(() => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const scorecardImage = await generateScorecardImage(client);
 
@@ -354,6 +355,9 @@ async function handleLeaderboardCommand(userId, client, respond) {
         }
       ]
     });
+
+    // We're done, no need to send the message about work being done
+    clearInterval(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error sending leaderboard message. ${error}`);
@@ -375,7 +379,8 @@ async function handleScorecardCommand(client, commandText, respond) {
     await respond('You didn\'t specify which user scorecard you would like to see. Please try again.');
   }
   else {
-    await respond(userWorkingOnItMessage);
+    // Only display the message if operation takes longer than expected
+    var workingOnItMessageInterval = setInterval(() => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
     const scorecardImage = await generateScorecardImage(client, userIdToShow);
@@ -409,6 +414,9 @@ async function handleScorecardCommand(client, commandText, respond) {
           }
         ]
       });
+
+      // We're done, no need to send the message about work being done
+      clearInterval(workingOnItMessageInterval);
     }
     catch (error) {
       console.error(`There was an error sending scorecard message. ${error}`);
@@ -461,7 +469,8 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     await ack();
   }
 
-  await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) });
+  // Only display the message if operation takes longer than expected
+  var workingOnItMessageInterval = setInterval(() => { await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) }); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const mongoClient = createMongoDBClient();
 
@@ -543,6 +552,9 @@ app.view('modal_submission', async ({ ack, body, view }) => {
         text: `*${message}*`
       })
     });
+
+    // We're done, no need to send the message about work being done
+    clearInterval(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);

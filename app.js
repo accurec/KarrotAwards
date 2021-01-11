@@ -221,49 +221,60 @@ async function uploadImageToUDrop(image) {
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
 async function handleHelpCommand(respond) {
-  await respond({
-    attachments: [
-      {
-        color: '#de5c00',
-        blocks: [
-          {
-            type: 'header',
-            text: {
-              type: 'plain_text',
-              text: 'Help:'
+  // Only display the message if operation takes longer than expected
+  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+
+  try {
+    await respond({
+      attachments: [
+        {
+          color: '#de5c00',
+          blocks: [
+            {
+              type: 'header',
+              text: {
+                type: 'plain_text',
+                text: 'Help:'
+              }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:'
+              }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!`
+              }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
+              }
+            },
+            {
+              type: 'section',
+              text: {
+                type: 'mrkdwn',
+                text: `*P.S.* Are you a creative writer? :upside_down_face: You can contribute to this project! To get more details please feel free to contact \`${process.env.CONTRIBUTE_EMAIL_ADDR}\`! :slightly_smiling_face:`
+              }
             }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:'
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!`
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: '- Curious to see what awards a specific user won so far? Use \`/karrotawards scorecard @someone\` and you will get a private message to see that user\'s scorecard.\n*Note:* If you mention multiple users, you will only see the first user\'s scorecard.'
-            }
-          },
-          {
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: `*P.S.* Are you a creative writer? :upside_down_face: You can contribute to this project! To get more details please feel free to contact \`${process.env.CONTRIBUTE_EMAIL_ADDR}\`! :slightly_smiling_face:`
-            }
-          }
-        ]
-      }]
-  });
+          ]
+        }]
+    });
+  }
+  catch (error) {
+    console.error(`There was an error sending help message. ${error}`);
+  }
+  finally {
+    clearTimeout(workingOnItMessageInterval);
+  }
 }
 
 /**
@@ -274,9 +285,13 @@ async function handleHelpCommand(respond) {
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
 async function handleAwardRequestCommand(client, responseUrl, triggerId, respond) {
+  // Only display the message if operation takes longer than expected
+  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+
   const mongoClient = createMongoDBClient();
 
   if (mongoClient == null) {
+    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -293,6 +308,7 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
   }
   catch (error) {
     console.error(`There was an error getting awards from the DB. ${error}`);
+    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -311,6 +327,9 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
     console.error(`There was an error creating the modal and sending it to the user. ${error}`);
     await respond(userErrorMessage);
   }
+  finally {
+    clearTimeout(workingOnItMessageInterval);
+  }
 }
 
 /**
@@ -326,6 +345,7 @@ async function handleLeaderboardCommand(userId, client, respond) {
   const scorecardImage = await generateScorecardImage(client);
 
   if (scorecardImage == null) {
+    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -333,6 +353,7 @@ async function handleLeaderboardCommand(userId, client, respond) {
   const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
 
   if (imageUDropUrl == null) {
+    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -355,13 +376,13 @@ async function handleLeaderboardCommand(userId, client, respond) {
         }
       ]
     });
-
-    // We're done, no need to send the message about work being done
-    clearTimeout(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error sending leaderboard message. ${error}`);
     await respond(userErrorMessage);
+  }
+  finally {
+    clearTimeout(workingOnItMessageInterval);
   }
 }
 
@@ -386,6 +407,7 @@ async function handleScorecardCommand(client, commandText, respond) {
     const scorecardImage = await generateScorecardImage(client, userIdToShow);
 
     if (scorecardImage == null) {
+      clearTimeout(workingOnItMessageInterval);
       respond(userErrorMessage);
       return;
     }
@@ -393,6 +415,7 @@ async function handleScorecardCommand(client, commandText, respond) {
     const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
 
     if (imageUDropUrl == null) {
+      clearTimeout(workingOnItMessageInterval);
       respond(userErrorMessage);
       return;
     }
@@ -414,13 +437,13 @@ async function handleScorecardCommand(client, commandText, respond) {
           }
         ]
       });
-
-      // We're done, no need to send the message about work being done
-      clearTimeout(workingOnItMessageInterval);
     }
     catch (error) {
       console.error(`There was an error sending scorecard message. ${error}`);
       await respond(userErrorMessage);
+    }
+    finally {
+      clearTimeout(workingOnItMessageInterval);
     }
   }
 }
@@ -475,6 +498,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
   const mongoClient = createMongoDBClient();
 
   if (mongoClient == null) {
+    clearTimeout(workingOnItMessageInterval);
     await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
     return;
   }
@@ -530,6 +554,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
   }
   catch (error) {
     console.error(`There was an error updating scorecards or getting message template from the DB. ${error}`);
+    clearTimeout(workingOnItMessageInterval);
     await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
     return;
   }
@@ -552,13 +577,13 @@ app.view('modal_submission', async ({ ack, body, view }) => {
         text: `*${message}*`
       })
     });
-
-    // We're done, no need to send the message about work being done
-    clearTimeout(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);
     await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userErrorMessage }) });
+  }
+  finally {
+    clearTimeout(workingOnItMessageInterval);
   }
 });
 

@@ -1,3 +1,14 @@
 [{"text":"Amazed {sender} got too excited about today's weather and gracefully awarded brave {receiver} with a shiny {award} in an envelope! On the back {sender} added: \"{attachmentText}\"."},
- {"text":"The stars aligned today, and {sender} somehow managed to make up their mind and appreciate {receiver} with a little gift. To everyone's surprise it was a dusty old {award}. Remembering this event 50 years later {sender} mumbled in awe: \"{attachmentText}\"."},
- {"text":"Without too much thought {sender} decided to throw {award} at {receiver}. \"{attachmentText}\" - {sender} yelled desperately."}]
+ {"text":"The stars aligned today, and {sender} somehow managed to make up their mind and appreciate {receiver} with a little gift. To everyone's surprise it was a dusty old {award}. Remembering this event 50 years later {sender} whispered: \"{attachmentText}\"."},
+ {"text":"Without too much thought {sender} decided to throw {award} at {receiver}. \"{attachmentText}\" - {sender} yelled as loud as they could."},
+ {"text":"{sender} said \"{attachmentText}\" and awarded {receiver} with {award}."},
+ {"text":"{sender} couldn't wait any longer and delivered shiny new {award} to the most awesome {receiver} with a special note: \"{attachmentText}\"."},
+ {"text":"Generous {sender} sent well deserved {award} to fabulous {receiver} for \"{attachmentText}\"."},
+ {"text":"{sender} graciously awarded {receiver} with best {award} in town and said: \"{attachmentText}\"."},
+ {"text":"{sender} would like to invite {receiver} on the stage to receive the most prestigious {award} for \"{attachmentText}\"."},
+ {"text":"{sender} just awarded incredible {receiver} with the most spectacular {award} for \"{attachmentText}\"."},
+ {"text":"\"{attachmentText}\" said {sender} and gave fantastic {receiver} glowing and very rare {award}."},
+ {"text":"Awesome {receiver} received a special delivery of magnificent {award} from happy {sender} for \"{attachmentText}\"."},
+ {"text":"One thing that was always on the {sender} bucket list was to give {award} to {receiver} and say: \"{attachemntText}\". So {sender} did exactly that today!"},
+ {"text":"By a sparkling and cool lake, {sender} reflected on the past. {sender} remembered an old good times of sharing {award} with {receiver} and telling them \"{attachemntText}\". \"A truly joyous moment!\" {sender} whispered."},
+ {"text":"Head high, {sender} swept out of the room. A second later, head even higher, {sender} swept back in, with hands full of {award}. \"{attachmentText}\" declared {sender} and sprinkled it all on top of {receiver} head."}]

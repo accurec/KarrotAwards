@@ -94,7 +94,7 @@ class ModalHelper {
     const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ responseUrl: responseUrl }));
     modal.multiUserSelection(selectedUsersBlockId, `Who is the lucky person? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_USERS})`, `Select user(s)`, 'user-select-action', false);
     modal.multiItemsSelection(selectedAwardsBlockId, `What award are they getting? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS})`, `Select award(s)`, 'award-select-action', awards, false);
-    modal.textInput('Would you like to say something special to them?', 'text-input-action', 'attachment-text-input-block', true);
+    modal.textInput('Say something special to them!', 'text-input-action', 'attachment-text-input-block', false); // Decided to make mandatory for now
 
     return modal;
   }

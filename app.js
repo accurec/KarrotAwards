@@ -321,7 +321,7 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
  */
 async function handleLeaderboardCommand(userId, client, respond) {
   // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setInterval(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const scorecardImage = await generateScorecardImage(client);
 
@@ -357,7 +357,7 @@ async function handleLeaderboardCommand(userId, client, respond) {
     });
 
     // We're done, no need to send the message about work being done
-    clearInterval(workingOnItMessageInterval);
+    clearTimeout(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error sending leaderboard message. ${error}`);
@@ -380,7 +380,7 @@ async function handleScorecardCommand(client, commandText, respond) {
   }
   else {
     // Only display the message if operation takes longer than expected
-    var workingOnItMessageInterval = setInterval(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+    var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
     const scorecardImage = await generateScorecardImage(client, userIdToShow);
@@ -416,7 +416,7 @@ async function handleScorecardCommand(client, commandText, respond) {
       });
 
       // We're done, no need to send the message about work being done
-      clearInterval(workingOnItMessageInterval);
+      clearTimeout(workingOnItMessageInterval);
     }
     catch (error) {
       console.error(`There was an error sending scorecard message. ${error}`);
@@ -470,7 +470,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
   }
 
   // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setInterval(async () => { await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) }); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
+  var workingOnItMessageInterval = setTimeout(async () => { await got.post(viewSubmissionPayload.responseUrl, { body: JSON.stringify({ text: userWorkingOnItMessage }) }); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   const mongoClient = createMongoDBClient();
 
@@ -554,7 +554,7 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     });
 
     // We're done, no need to send the message about work being done
-    clearInterval(workingOnItMessageInterval);
+    clearTimeout(workingOnItMessageInterval);
   }
   catch (error) {
     console.error(`There was an error generating and posting final message to the channel about assigned awards. ${error}`);

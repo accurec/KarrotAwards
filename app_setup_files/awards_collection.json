@@ -10,4 +10,5 @@
  {"text":":karrotawards_star_2:","userText":"Big star","weight":{"$numberInt":"2"}},
  {"text":":karrotawards_stars:","userText":"Many stars","weight":{"$numberInt":"3"}},
  {"text":":karrotawards_sweet_potato:","userText":"Sweet potato","weight":{"$numberInt":"2"}},
- {"text":":karrotawards_wine_glass:","userText":"Wine","weight":{"$numberDouble":"0.7"}}]
+ {"text":":karrotawards_wine_glass:","userText":"Wine","weight":{"$numberDouble":"0.7"}},
+ {"text":":karrotawards_devil:","userText":"Devil","weight":{"$numberInt":"2"}}]

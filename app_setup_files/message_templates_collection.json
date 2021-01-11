@@ -9,6 +9,10 @@
  {"text":"{sender} just awarded incredible {receiver} with the most spectacular {award} for \"{attachmentText}\"."},
  {"text":"\"{attachmentText}\" said {sender} and gave fantastic {receiver} glowing and very rare {award}."},
  {"text":"Awesome {receiver} received a special delivery of magnificent {award} from happy {sender} for \"{attachmentText}\"."},
- {"text":"One thing that was always on the {sender} bucket list was to give {award} to {receiver} and say: \"{attachmentText}\". So {sender} did exactly that today!"},
+ {"text":"There's one thing that {sender} always had on their bucket list and that was to give {award} to {receiver} and say: \"{attachmentText}\". So {sender} did exactly that today!"},
  {"text":"By a sparkling and cool lake, {sender} reflected on the past. {sender} remembered an old good times of sharing {award} with {receiver} and telling them \"{attachmentText}\". \"A truly joyous moment!\" {sender} whispered."},
- {"text":"Head high, {sender} swept out of the room. A second later, head even higher, {sender} swept back in, with hands full of {award}. \"{attachmentText}\" declared {sender} and sprinkled it all on top of {receiver} head."}]
+ {"text":"Head high, {sender} swept out of the room. A second later, head even higher, {sender} swept back in, with hands full of {award}. \"{attachmentText}\" declared {sender} and sprinkled it all on top of {receiver} head."},
+ {"text":"\"Thank you, merci, grazie for all your hard work, and for {attachmentText}\" - and then {sender} showered {receiver} with a handful of {award}!"},
+ {"text":"{receiver}, you play a very important role on this team! {sender} appreciates and admires your work and wanted to show their appreciation by awarding you {award} for \"{attachmentText}\"."},
+ {"text":"Yo, heard {receiver} needed to be motivated. So {sender} sent {award} with some wise words on top of it: \"{attachmentText}\"."},
+ {"text":"While the sun usually sets on the west, today {sender} decided to close the day by shining some light on {receiver} with perfectly looking {award} for their amazing contribution. \"{attachmentText}\" - were {sender} last words in regards to this occasion."}]

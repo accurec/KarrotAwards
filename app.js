@@ -343,7 +343,7 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   let numberOfUsersToDisplay;
-  const regExp = new RegExp(`^leaderboard \\d{${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'gi');
+  const regExp = new RegExp(`^leaderboard \\d{1,${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'i');
 
   if (commandText.toLowerCase().trim() === 'leaderboard') {
     numberOfUsersToDisplay = parseInt(process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS);

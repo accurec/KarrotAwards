@@ -248,7 +248,7 @@ async function handleHelpCommand(respond) {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_NUMBER_OF_USERS} performers to the channel!`
+                text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS} performers to the channel by default! Or you can also specify the number of users you would like to see by explicitly adding the number as a parameter. For example, \`/karrotawards leaderboard 15\` will generate leaderboard for 15 top users. Allowed values are between 1 and ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}.`
               }
             },
             {
@@ -342,10 +342,12 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   // Only display the message if operation takes longer than expected
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
+let numberOfUsersToDisplay = 10;
+
 console.log(commandText);
 // LEADERBOARD_DEFAULT_NUMBER_OF_USERS = 10
 // LEADERBOARD_MAX_NUMBER_OF_USERS = 30
-  const scorecardImage = await generateScorecardImage(client, 10, null);
+  const scorecardImage = await generateScorecardImage(client, numberOfUsersToDisplay, null);
 
   if (scorecardImage == null) {
     clearTimeout(workingOnItMessageInterval);
@@ -369,7 +371,7 @@ console.log(commandText);
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `:sunglasses: *Requested by the fabulous <@${userId}>! KarrotAwards "Top ${process.env.LEADERBOARD_NUMBER_OF_USERS}" leaderboard!* :fireworks:`
+            text: `:sunglasses: *Requested by the fabulous <@${userId}>! KarrotAwards "Top ${numberOfUsersToDisplay}" leaderboard!* :fireworks:`
           }
         },
         {
@@ -467,7 +469,7 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
     console.info(`Got award request from [${requester}].`);
     await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
   }
-  // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel. Show top env.LEADERBOARD_NUMBER_OF_USERS users
+  // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel
   else if (body.text.toLowerCase().includes('leaderboard')) {
     console.info(`Got leaderboard request from [${requester}].`);
     await handleLeaderboardCommand(body.user_id, body.text, client, respond);

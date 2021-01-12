@@ -1,6 +1,7 @@
 // Const values that are used for modal generation and also validation response.
 const selectedUsersBlockId = 'user-select-block';
 const selectedAwardsBlockId = 'awards-select-block';
+const attachmentTextBlockId = 'attachment-text-input-block';
 
 /**
  * Wrapper class to generate elements for Slack modal and modal itself.
@@ -94,7 +95,7 @@ class ModalHelper {
     const modal = new Modal('KarrotAwards', 'Submit', 'Cancel', JSON.stringify({ responseUrl: responseUrl }));
     modal.multiUserSelection(selectedUsersBlockId, `Who is the lucky person? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_USERS})`, `Select user(s)`, 'user-select-action', false);
     modal.multiItemsSelection(selectedAwardsBlockId, `What award are they going to get? (maximum of ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS})`, `Select award(s)`, 'award-select-action', awards, false);
-    modal.textInput('Say something special to them!', 'text-input-action', 'attachment-text-input-block', false); // Decided to make mandatory for now
+    modal.textInput(`Say something special to them! (maximum of ${process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER} characters)`, 'text-input-action', attachmentTextBlockId, false); // Decided to make mandatory for now
 
     return modal;
   }
@@ -115,6 +116,10 @@ class ModalHelper {
 
     if (Object.entries(awardsModalSubmissionPayload.selectedAwards).length > process.env.MAX_NUMBER_OF_SELECTED_AWARDS) {
       errors[selectedAwardsBlockId] = `You can only select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards.`;
+    }
+
+    if (Object.entries(awardsModalSubmissionPayload.selectedAwards).length > process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER) {
+      errors[attachmentTextBlockId] = `The message cannot exceed ${process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER} characters.`;
     }
 
     return errors;

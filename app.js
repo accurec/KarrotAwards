@@ -473,32 +473,31 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   // As per spec, acknowledge first
   await ack();
 
-  const requester = `${body.user_id}:${body.user_name}`;
+  console.info(`Got command request [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.text}].`);
 
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
-    console.info(`Got help request from [${requester}].`);
     await handleHelpCommand(respond);
   }
   // Main flow to give someone an award
   else if (body.text.trim() === '') {
-    console.info(`Got award request from [${requester}].`);
     await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel
   else if (body.text.toLowerCase().includes('leaderboard')) {
-    console.info(`Got leaderboard request from [${requester}].`);
     await handleLeaderboardCommand(body.user_id, body.text, client, respond);
   }
   // Flow to show stats for just one user specified in the request
   else if (body.text.toLowerCase().includes('scorecard')) {
-    console.info(`Got scorecard request from [${requester}].`);
     await handleScorecardCommand(client, body.text, respond);
   }
 });
 
 app.view('modal_submission', async ({ ack, body, view }) => {
   const viewSubmissionPayload = new AwardsModalSubmissionPayload(body, view);
+
+  console.info(`Got award submission payload [${JSON.stringify(viewSubmissionPayload)}].`);
+
   const errors = ModalHelper.validateModalSubmissionPayload(viewSubmissionPayload);
 
   if (Object.entries(errors).length > 0) {

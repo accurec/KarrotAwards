@@ -42,10 +42,11 @@ function createMongoDBClient() {
 /**
  * Function to generate HTML table image with user score and awards.
  * @param {WebClient} client Slack WebApi client to make calls to get some additional info.
- * @param {String} targetUserId User id for which we need to generate scorecard image. If set to null then will do top X users as defined in config
+ * @param {Number} numberOfUsers Number of users to show in the table image.
+ * @param {String} targetUserId User id for which we need to generate scorecard image. If set to null then will do top X users as defined in config.
  * @return {Promise<Buffer>} Image buffer data.
  */
-async function generateScorecardImage(client, targetUserId = null) {
+async function generateScorecardImage(client, numberOfUsers, targetUserId) {
   const mongoClient = createMongoDBClient();
 
   if (mongoClient == null) {
@@ -157,9 +158,8 @@ async function generateScorecardImage(client, targetUserId = null) {
   });
 
   try {
-    // Generate HTML, image for the top LEADERBOARD_NUMBER_OF_USERS
     const scorecardImage = await nodeHtmlToImage({
-      html: HtmlTableHelper.generateHTMLTable(awards, (targetUserId == null ? userStats.sort((a, b) => b.awardsCount.slice(-1) - a.awardsCount.slice(-1)).slice(0, process.env.LEADERBOARD_NUMBER_OF_USERS) : userStats)).contents,
+      html: HtmlTableHelper.generateHTMLTable(awards, (targetUserId == null ? userStats.sort((a, b) => b.awardsCount.slice(-1) - a.awardsCount.slice(-1)).slice(0, numberOfUsers) : userStats)).contents,
       content: awards.reduce((current, award) => {
         current[award._id] = `data:image/jpeg;base64,${award.urlContents.toString('base64')}`;
         return current;
@@ -338,11 +338,14 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
  * @param {WebClient} client Slack WebApi client to make calls to get some additional info.
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
-async function handleLeaderboardCommand(userId, client, respond) {
+async function handleLeaderboardCommand(userId, commandText, client, respond) {
   // Only display the message if operation takes longer than expected
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
-  const scorecardImage = await generateScorecardImage(client);
+console.log(commandText);
+// LEADERBOARD_DEFAULT_NUMBER_OF_USERS = 10
+// LEADERBOARD_MAX_NUMBER_OF_USERS = 30
+  const scorecardImage = await generateScorecardImage(client, 10, null);
 
   if (scorecardImage == null) {
     clearTimeout(workingOnItMessageInterval);
@@ -404,7 +407,7 @@ async function handleScorecardCommand(client, commandText, respond) {
     var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
-    const scorecardImage = await generateScorecardImage(client, userIdToShow);
+    const scorecardImage = await generateScorecardImage(client, 1, userIdToShow);
 
     if (scorecardImage == null) {
       clearTimeout(workingOnItMessageInterval);
@@ -465,9 +468,9 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
     await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel. Show top env.LEADERBOARD_NUMBER_OF_USERS users
-  else if (body.text.toLowerCase().trim() === 'leaderboard') {
+  else if (body.text.toLowerCase().includes('leaderboard')) {
     console.info(`Got leaderboard request from [${requester}].`);
-    await handleLeaderboardCommand(body.user_id, client, respond);
+    await handleLeaderboardCommand(body.user_id, body.text, client, respond);
   }
   // Flow to show stats for just one user specified in the request
   else if (body.text.toLowerCase().includes('scorecard')) {

@@ -342,11 +342,26 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   // Only display the message if operation takes longer than expected
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
-let numberOfUsersToDisplay = 10;
+  let numberOfUsersToDisplay;
 
-console.log(commandText);
-// LEADERBOARD_DEFAULT_NUMBER_OF_USERS = 10
-// LEADERBOARD_MAX_NUMBER_OF_USERS = 30
+  if (commandText.toLowerCase().trim() === 'leaderboard') {
+    numberOfUsersToDisplay = parseInt(process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS);
+  }
+  else if (/^leaderboard \d{2}$/gi.test(commandText) !== true) {
+    clearTimeout(workingOnItMessageInterval);
+    await respond(`Sorry, the command was not in a correct format. Please refer to \`/karrotawards help\` command to see the correct format.`);
+    return;
+  }
+  else {
+    numberOfUsersToDisplay = parseInt(commandText.split(' ')[1]);
+  }
+
+  if (numberOfUsersToDisplay < 1 || numberOfUsersToDisplay > process.env.LEADERBOARD_MAX_NUMBER_OF_USERS) {
+    clearTimeout(workingOnItMessageInterval);
+    await respond(`Sorry, the allowed range of leaderboard users is between 1 and ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}.`);
+    return;
+  }
+
   const scorecardImage = await generateScorecardImage(client, numberOfUsersToDisplay, null);
 
   if (scorecardImage == null) {

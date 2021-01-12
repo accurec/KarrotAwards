@@ -343,7 +343,7 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   let numberOfUsersToDisplay;
-  const regExp = new RegExp(`^leaderboard \d{${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'gi');
+  const regExp = new RegExp(`^leaderboard \\d{${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'gi');
 
   if (commandText.toLowerCase().trim() === 'leaderboard') {
     numberOfUsersToDisplay = parseInt(process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS);
@@ -611,5 +611,5 @@ app.view('modal_submission', async ({ ack, body, view }) => {
 // Main -> start the Bolt app.
 (async () => {
   await app.start(process.env.PORT);
-  console.info('KarrotAwards Bolt app started!!!');
+  console.info('KarrotAwards Bolt app started!');
 })();

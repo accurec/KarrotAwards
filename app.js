@@ -248,7 +248,7 @@ async function handleHelpCommand(respond) {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS} performers to the channel by default! Or you can also specify the number of users you would like to see by explicitly adding the number as a parameter. For example, \`/karrotawards leaderboard ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}\` will generate leaderboard for ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS} top users. Allowed values are between 1 and ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}.`
+                text: `- To see who is leading the awards race you can use \`/karrotawards leaderboard\`. It will display top ${process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS} performers to the channel by default! You can also specify the number of top users by adding the number as a parameter. For example, \`/karrotawards leaderboard ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}\`. Allowed values are between 1 and ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}.`
               }
             },
             {

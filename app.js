@@ -343,13 +343,14 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   let numberOfUsersToDisplay;
+  const regExp = new RegExp(`^leaderboard \d{${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'gi');
 
   if (commandText.toLowerCase().trim() === 'leaderboard') {
     numberOfUsersToDisplay = parseInt(process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS);
   }
-  else if (/^leaderboard \d{2}$/gi.test(commandText) !== true) {
+  else if (regExp.test(commandText) !== true) {
     clearTimeout(workingOnItMessageInterval);
-    await respond(`Sorry, the command was not in a correct format. Please refer to \`/karrotawards help\` command to see the correct format.`);
+    await respond(`Sorry, the command was not in a correct format or the number you have entered is outside of allowed bounds. Please refer to \`/karrotawards help\` command for the correct use.`);
     return;
   }
   else {

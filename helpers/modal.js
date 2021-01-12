@@ -118,7 +118,7 @@ class ModalHelper {
       errors[selectedAwardsBlockId] = `You can only select up to ${process.env.MAX_NUMBER_OF_SELECTED_AWARDS} awards.`;
     }
 
-    if (attachmentText.length > process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER) {
+    if (awardsModalSubmissionPayload.attachmentText.length > process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER) {
       errors[attachmentTextBlockId] = `The message cannot exceed ${process.env.AWARD_MESSAGE_MAX_CHARACTER_NUMBER} characters.`;
     }
 

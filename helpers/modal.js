@@ -10,6 +10,7 @@ class Modal {
   constructor(titleText, submitText, cancelText, privateMetadata) {
     this.type = 'modal';
     this.callback_id = 'modal_submission';
+    this.notify_on_close = true;
     this.title = { type: 'plain_text', text: titleText };
     this.submit = { type: 'plain_text', text: submitText };
     this.close = { type: 'plain_text', text: cancelText };

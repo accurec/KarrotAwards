@@ -473,7 +473,7 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   // As per spec, acknowledge first
   await ack();
 
-  console.info(`Got command request [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.text}].`);
+  console.info(`Got command request [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.trigger_id};${body.text}].`);
 
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
@@ -494,9 +494,12 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
 });
 
 app.view('modal_submission', async ({ ack, body, view }) => {
+  console.info(body);
+  console.info(view);
+
   const viewSubmissionPayload = new AwardsModalSubmissionPayload(body, view);
 
-  console.info(`Got award submission payload [${JSON.stringify(viewSubmissionPayload)}].`);
+  //console.info(`Got award submission payload [${JSON.stringify(viewSubmissionPayload)}].`);
 
   const errors = ModalHelper.validateModalSubmissionPayload(viewSubmissionPayload);
 
@@ -606,6 +609,8 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     clearTimeout(workingOnItMessageInterval);
   }
 });
+
+app.view()
 
 // Main -> start the Bolt app.
 (async () => {

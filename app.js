@@ -283,8 +283,10 @@ async function handleHelpCommand(respond) {
  * @param {String} responseUrl This will be included in the modal metadata so that when user submits it we can post message to where it originated from.
  * @param {String} triggerId In case everything is fine and the modal is ready, trigger id is needed to open the modal for the user.
  * @param {RespondFn} respond Slack API respond function attached to the current context.
+ * @param {String} userId Id of the user that initiated the command.
+ * @param {String} channelId Channel id where the command was called.
  */
-async function handleAwardRequestCommand(client, responseUrl, triggerId, respond) {
+async function handleAwardRequestCommand(client, responseUrl, triggerId, respond, userId, channelId) {
   // Only display the message if operation takes longer than expected
   var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
@@ -318,10 +320,12 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
 
   try {
     // Sort the awards list so that the awards always show up in the same order - for consistent user experience
-    await client.views.open({
+    const modalOpenViewResult = await client.views.open({
       trigger_id: triggerId,
       view: ModalHelper.generateAwardsModal(responseUrl, dbAwards.sort((a, b) => b.weight - a.weight || a.text.localeCompare(b.text)).map(dbAward => { return { text: `${dbAward.userText} ${dbAward.text}`, value: `award-select-value-${dbAward._id}` }; }))
     });
+
+    console.info(`Opened awards modal [${userId}:${channelId}:${modalOpenViewResult.view.id}].`);
   }
   catch (error) {
     console.error(`There was an error creating the modal and sending it to the user. ${error}`);
@@ -473,7 +477,7 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   // As per spec, acknowledge first
   await ack();
 
-  console.info(`Got command request [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.trigger_id};${body.text}].`);
+  console.info(`Got command [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.trigger_id};${body.text}].`);
 
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
@@ -481,7 +485,7 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   }
   // Main flow to give someone an award
   else if (body.text.trim() === '') {
-    await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond);
+    await handleAwardRequestCommand(client, body.response_url, body.trigger_id, respond, body.user_id, body.channel_id);
   }
   // Flow to generate full scorecard list, convert it to HTML table, then image and then send it back to the channel
   else if (body.text.toLowerCase().includes('leaderboard')) {
@@ -493,13 +497,16 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   }
 });
 
-app.view('modal_submission', async ({ ack, body, view }) => {
-  console.info(body);
-  console.info(view);
+app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_closed' }, async ({ ack, body, view }) => {
+  ack();
 
+  console.info(`The awards modal was closed [${body.user.id}:${body.user.name};${view.id};${body.is_cleared}].`);
+});
+
+app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_submission' }, async ({ ack, body, view }) => {
   const viewSubmissionPayload = new AwardsModalSubmissionPayload(body, view);
 
-  //console.info(`Got award submission payload [${JSON.stringify(viewSubmissionPayload)}].`);
+  console.info(`Got award submission payload [${JSON.stringify(viewSubmissionPayload)}].`);
 
   const errors = ModalHelper.validateModalSubmissionPayload(viewSubmissionPayload);
 
@@ -609,8 +616,6 @@ app.view('modal_submission', async ({ ack, body, view }) => {
     clearTimeout(workingOnItMessageInterval);
   }
 });
-
-app.view()
 
 // Main -> start the Bolt app.
 (async () => {

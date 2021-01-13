@@ -495,6 +495,10 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   else if (body.text.toLowerCase().includes('scorecard')) {
     await handleScorecardCommand(client, body.text, respond);
   }
+  // Default flow to let user know the command is not valid
+  else {
+    await respond(`Sorry, unrecognized command. Please refer to \`/karrotawards help\` for information on what commands are available. :wink:`);
+  }
 });
 
 app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_closed' }, async ({ ack, body, view }) => {

@@ -241,7 +241,7 @@ async function handleHelpCommand(respond) {
               type: 'section',
               text: {
                 type: 'mrkdwn',
-                text: '- To give someone one or multiple awards you can use \`/karrotawards\`.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:'
+                text: '- To give someone one or multiple awards you can type \`/karrotawards\` and press enter - this will open up a new dialog window.\n*Fun fact:* every award has its own score, but I\'m not going to tell you how much each award is worth :stuck_out_tongue_winking_eye:'
               }
             },
             {

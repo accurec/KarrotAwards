@@ -19,4 +19,14 @@
  {"text":"It's that time of the week again! Time to be a hero and rescue {receiver} from the abyss of this week. {sender} is sending {award} and some final words of greatness: \"{attachmentText}\"."},
  {"text":"Hey {receiver}, you can do it! {sender} believes that you're doing great work and awards you with {award} and their very important message: \"{attachmentText}\"."},
  {"text":"Oh mighty warrior, {receiver}, you've freed us from the invincible dragon, Virus 2.0. The legendary wizard, {sender} bestows upon you the honorary {award} and pronounces: \"{attachmentText}\"."},
- {"text":"May we all imagine our future ... enjoying a bowl of chips with {receiver}. Here's the dip {award} to go with it. {sender} can't wait to party and cried out loud \"{attachmentText}\"."}]
+ {"text":"May we all imagine our future ... enjoying a bowl of chips with {receiver}. Here's the dip {award} to go with it. {sender} can't wait to party and cried out loud \"{attachmentText}\"."},
+ {"text":"{sender} is the kind of person who doesn't sweat the small stuff. Instead they got {receiver} the {award} for \"{attachmentText}\"."},
+ {"text":"Hope you had a great year, {receiver}! {sender} has prepared a beautiful {award} for you, just because they care. \"{attachmentText}\" - {sender} said."},
+ {"text":"{receiver}, your performance this week have been out of this world! {sender} decided to reward your efforts with {award} and declared: \"{attachmentText}\"."},
+ {"text":"{sender} was going to provide {receiver} with a new {award} because of \"{attachmentText}\", but then {sender} decided to give an old {award} with some new paint."},
+ {"text":"{sender} was so hungry that they accidentally gave {award} to {receiver} instead of food while yelling \"{attachmentText}\"."},
+ {"text":"{sender} could not find any way to cheer up {receiver}, so they wrapped {award} around their neck and declared: \"{attachmentText}\"."},
+ {"text":"Yesterday was a good day, but today is an even better day! The light of the sun bounced off of the shiny new {award} and landed on {receiver}. \"{attachmentText}\" - {sender} announced as they handed over the present."},
+ {"text":"{sender} was so surprised that they cried out loud and woke up {receiver}. In a hurry {sender} awarded {receiver} with {award} for \"{attachmentText}\"."},
+ {"text":"It's a beautiful day in the neighbourhood and {sender} couldn't stop singing: \"{attachmentText}\". Everyone loved it, especially {receiver}, who got the chance to receive this very unusual and unique {award}."},
+ {"text":"{receiver} has been busy being awesome this week, and here's your awesomeness award {award}. \"{attachmentText}\" - were {sender} words of encouragement and appreciation!"}]

@@ -29,4 +29,7 @@
  {"text":"Yesterday was a good day, but today is an even better day! The light of the sun bounced off of the shiny new {award} and landed on {receiver}. \"{attachmentText}\" - {sender} announced as they handed over the present."},
  {"text":"{sender} was so surprised that they cried out loud and woke up {receiver}. In a hurry {sender} awarded {receiver} with {award} for \"{attachmentText}\"."},
  {"text":"It's a beautiful day in the neighbourhood and {sender} couldn't stop singing: \"{attachmentText}\". Everyone loved it, especially {receiver}, who got the chance to receive this very unusual and unique {award}."},
- {"text":"{receiver} has been busy being awesome this week, and here's your awesomeness award {award}. \"{attachmentText}\" - were {sender} words of encouragement and appreciation!"}]
+ {"text":"{receiver} has been busy being awesome this week, and here's your awesomeness award {award}. \"{attachmentText}\" - were {sender} words of encouragement and appreciation!"},
+ {"text":"{sender} was having a bad day, until they saw {receiver} who was just awarded with {award}. This made {sender} so happy that they threw their hands in the air and shouted: \"{attachmentText}\"."},
+ {"text":"{sender} was so tired that they fell asleep on the floor, and dreamed about giving {receiver} {award}. In their dream, {sender} was shouting: \"{attachmentText}\"."},
+ {"text":"{sender} had an urge to show {receiver} how much they appreciate them, so they bought a new {award} and exclaimed: \"{attachmentText}\"."}]

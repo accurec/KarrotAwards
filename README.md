@@ -5,7 +5,7 @@
 - [Overview](#overview)
 - [Functions](#functions)
 - [Components and Limitations](#components-and-limitations)
-- [Setup](#setup)
+- [Setupand Testing](#setup-and-testing)
 - [Code Structure](#code-structure)
 - [Observations and Lessons Learned](#observations-and-lessons-learned)
 - [Future Improvements](#future-improvements)
@@ -39,16 +39,18 @@ All the above functions also take into consideration invalid user inputs and try
 
 ### Components and limitations
 This is a [NodeJS](https://nodejs.org/) application, coded using [Slack Bolt SDK](https://slack.dev/bolt-js/tutorial/getting-started).
-It is setup as [Slack](https://slack.com/) application. In the backend the data is stored in [MongoDB](https://www.mongodb.com/cloud/atlas) and [uDrop](https://www.udrop.com/) service is used to host generated images. The code is setup to be deployed to [Heroku](https://www.heroku.com) platform.
+It is setup as [Slack](https://slack.com/) application. In the backend the data is stored in [MongoDB](https://www.mongodb.com/cloud/atlas) and [uDrop](https://www.udrop.com/) service is used to host generated images. The code is setup to be deployed to [Heroku](https://www.heroku.com) platform. Local testing can be also done by using [Ngrok](https://ngrok.com/).
 
 The application is making use of [Got](https://github.com/sindresorhus/got) and [Node HTML to Image](https://github.com/frinyvonnick/node-html-to-image) packages to make API requests and generate images from HTML.
 
-Since in this application need to have actual emoji images to generate HTML table, the limitation of the application is that we need to add __KarrotAwards__ custom emojis to be able to generate leaderboard and scorecards.
+Although not actively used in the code as an API to produce and send messages back, half of the messages that are referenced in the [Message Templates](./app_setup_files/message_templates_collection.json) were generated (with very minor tweaks) by using [OpenAI API Beta](https://openai.com/) playground portal. I've got access to the open beta halfway through working on this project and was very impressed with the results that I was able to produce!
+
+Since in this application we need to have actual emoji images to generate HTML table, the limitation of the application is that we need to add __KarrotAwards__ custom emojis to Slack workspace to be able to generate leaderboard and scorecards.
 
 Another limitation is that it looks like as of January 16, 2021 Slack commands are not supported in Slack Threads, so this application will not work there.
 
-### Setup
-
+### Setup and testing
+[Ngrok](https://ngrok.com/), Heroku
 
 ### Code structure
 ### Observations and lessons learned

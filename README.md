@@ -5,9 +5,9 @@
 - [Overview](#overview)
 - [Functions](#functions)
 - [Components and Limitations](#components-and-limitations)
-- [Basic Setup](#basic-setup)
+- [Setup](#setup)
 - [Code Structure](#code-structure)
-- [Lessons Learned](#lessons-learned)
+- [Observations and Lessons Learned](#observations-and-lessons-learned)
 - [Future Improvements](#future-improvements)
 
 ### Overview
@@ -38,14 +38,23 @@ All the above functions also take into consideration invalid user inputs and try
 ![User input validation example](./readme_files/user_input_validation_example.gif)
 
 ### Components and limitations
-### Basic setup
+This is a [NodeJS](https://nodejs.org/) application, coded using [Slack Bolt SDK](https://slack.dev/bolt-js/tutorial/getting-started).
+It is setup as [Slack](https://slack.com/) application. In the backend the data is stored in [MongoDB](https://www.mongodb.com/cloud/atlas) and [uDrop](https://www.udrop.com/) service is used to host generated images. The code is setup to be deployed to [Heroku](https://www.heroku.com) platform.
+
+The application is making use of [Got](https://github.com/sindresorhus/got) and [Node HTML to Image](https://github.com/frinyvonnick/node-html-to-image) packages to make API requests and generate images from HTML.
+
+Since in this application need to have actual emoji images to generate HTML table, the limitation of the application is that we need to add __KarrotAwards__ custom emojis to be able to generate leaderboard and scorecards.
+
+Another limitation is that it looks like as of January 16, 2021 Slack commands are not supported in Slack Threads, so this application will not work there.
+
+### Setup
+
+
 ### Code structure
-### Lessons learned
+### Observations and lessons learned
 On the first week of release of this application to my organization Slack, 32 new Users started using the app in addition to previous 25 Users who were participating and keeping the score in a Word document! :laughing:
+
 ### Future improvements
-
-
-
 // TODO: Use OpenAI API GPT3 to generate messages instead of having them in the DB. Or maybe even mix both? Need to do some research. https://beta.openai.com/ 
 // TODO: For leaderboard also have different random messages like we have for the award announcements.
 // TODO: Instead of using uDrop service to host images, better option would be Amazon S3? https://devcenter.heroku.com/articles/s3-upload-node

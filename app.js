@@ -1,7 +1,3 @@
-// TODO: Use OpenAI API GPT3 to generate messages instead of having them in the DB. Or maybe even mix both? Need to do some research. https://beta.openai.com/ 
-// TODO: For leaderboard also have different random messages like we have for the award announcements.
-// TODO: Instead of using uDrop service to host images, better option would be Amazon S3? https://devcenter.heroku.com/articles/s3-upload-node
-
 require('dotenv').config();
 const got = require('got');
 const nodeHtmlToImage = require('node-html-to-image');
@@ -221,9 +217,6 @@ async function uploadImageToUDrop(image) {
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
 async function handleHelpCommand(respond) {
-  // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
-
   try {
     await respond({
       attachments: [
@@ -272,9 +265,6 @@ async function handleHelpCommand(respond) {
   catch (error) {
     console.error(`There was an error sending help message. ${error}`);
   }
-  finally {
-    clearTimeout(workingOnItMessageInterval);
-  }
 }
 
 /**
@@ -287,13 +277,9 @@ async function handleHelpCommand(respond) {
  * @param {String} channelId Channel id where the command was called.
  */
 async function handleAwardRequestCommand(client, responseUrl, triggerId, respond, userId, channelId) {
-  // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
-
   const mongoClient = createMongoDBClient();
 
   if (mongoClient == null) {
-    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -310,7 +296,6 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
   }
   catch (error) {
     console.error(`There was an error getting awards from the DB. ${error}`);
-    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -331,9 +316,6 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
     console.error(`There was an error creating the modal and sending it to the user. ${error}`);
     await respond(userErrorMessage);
   }
-  finally {
-    clearTimeout(workingOnItMessageInterval);
-  }
 }
 
 /**
@@ -343,9 +325,6 @@ async function handleAwardRequestCommand(client, responseUrl, triggerId, respond
  * @param {RespondFn} respond Slack API respond function attached to the current context.
  */
 async function handleLeaderboardCommand(userId, commandText, client, respond) {
-  // Only display the message if operation takes longer than expected
-  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
-
   let numberOfUsersToDisplay;
   const regExp = new RegExp(`^leaderboard \\d{1,${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS.length}}$`, 'i');
 
@@ -353,7 +332,6 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
     numberOfUsersToDisplay = parseInt(process.env.LEADERBOARD_DEFAULT_NUMBER_OF_USERS);
   }
   else if (regExp.test(commandText) !== true) {
-    clearTimeout(workingOnItMessageInterval);
     await respond(`Sorry, the command was not in a correct format or the number you have entered is outside of allowed bounds. Please refer to \`/karrotawards help\` command for the correct use.`);
     return;
   }
@@ -362,7 +340,6 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   }
 
   if (numberOfUsersToDisplay < 1 || numberOfUsersToDisplay > process.env.LEADERBOARD_MAX_NUMBER_OF_USERS) {
-    clearTimeout(workingOnItMessageInterval);
     await respond(`Sorry, the allowed range of leaderboard users is between 1 and ${process.env.LEADERBOARD_MAX_NUMBER_OF_USERS}.`);
     return;
   }
@@ -370,7 +347,6 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   const scorecardImage = await generateScorecardImage(client, numberOfUsersToDisplay, null);
 
   if (scorecardImage == null) {
-    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -378,7 +354,6 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
   const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
 
   if (imageUDropUrl == null) {
-    clearTimeout(workingOnItMessageInterval);
     await respond(userErrorMessage);
     return;
   }
@@ -406,9 +381,6 @@ async function handleLeaderboardCommand(userId, commandText, client, respond) {
     console.error(`There was an error sending leaderboard message. ${error}`);
     await respond(userErrorMessage);
   }
-  finally {
-    clearTimeout(workingOnItMessageInterval);
-  }
 }
 
 /**
@@ -425,14 +397,10 @@ async function handleScorecardCommand(client, commandText, respond) {
     await respond('You didn\'t specify which user scorecard you would like to see. Please try again.');
   }
   else {
-    // Only display the message if operation takes longer than expected
-    var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
-
     userIdToShow = userIdToShow.substr(2, userIdToShow.length - 3);
     const scorecardImage = await generateScorecardImage(client, 1, userIdToShow);
 
     if (scorecardImage == null) {
-      clearTimeout(workingOnItMessageInterval);
       respond(userErrorMessage);
       return;
     }
@@ -440,7 +408,6 @@ async function handleScorecardCommand(client, commandText, respond) {
     const imageUDropUrl = await uploadImageToUDrop(scorecardImage, respond);
 
     if (imageUDropUrl == null) {
-      clearTimeout(workingOnItMessageInterval);
       respond(userErrorMessage);
       return;
     }
@@ -467,9 +434,6 @@ async function handleScorecardCommand(client, commandText, respond) {
       console.error(`There was an error sending scorecard message. ${error}`);
       await respond(userErrorMessage);
     }
-    finally {
-      clearTimeout(workingOnItMessageInterval);
-    }
   }
 }
 
@@ -478,6 +442,9 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   await ack();
 
   console.info(`Got command [${body.user_id}:${body.user_name};${body.channel_id}:${body.channel_name};${body.trigger_id};${body.text}].`);
+
+  // Only display the message if operation takes longer than expected
+  var workingOnItMessageInterval = setTimeout(async () => { await respond(userWorkingOnItMessage); }, process.env.WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS);
 
   // Flow to show user private message about capabilities of this application
   if (body.text.toLowerCase().trim() === 'help') {
@@ -499,6 +466,9 @@ app.command('/karrotawards', async ({ ack, body, respond, client }) => {
   else {
     await respond(`Sorry, unrecognized command. Please refer to \`/karrotawards help\` for information on what commands are available. :wink:`);
   }
+
+  // We're done, no need to show working on it message
+  clearTimeout(workingOnItMessageInterval);  
 });
 
 app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_closed' }, async ({ ack, body, view }) => {

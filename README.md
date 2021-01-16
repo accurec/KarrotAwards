@@ -19,3 +19,9 @@
 ### Code structure
 ### Lessons learned
 ### Future improvements
+
+
+
+// TODO: Use OpenAI API GPT3 to generate messages instead of having them in the DB. Or maybe even mix both? Need to do some research. https://beta.openai.com/ 
+// TODO: For leaderboard also have different random messages like we have for the award announcements.
+// TODO: Instead of using uDrop service to host images, better option would be Amazon S3? https://devcenter.heroku.com/articles/s3-upload-node

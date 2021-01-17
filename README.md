@@ -102,7 +102,7 @@ The main code file is [app.js](./app.js) in which most of the work happens. The 
 - ```app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_closed' }, async ({ ack, body, view }) => { ...``` -> listener for awards modals closing, needed mostly for user interaction and behaviour analysis and logging
 
 Everything else is separate block functions that support the above entry points.
-Additionally, there are helpers related to [HTML functionality](./helpers/htmlTable.js) (generation) and [modal](./helpers/modal.js) (generation, validation, data extraction) functionality.
+Additionally, there are helpers related to [HTML](./helpers/htmlTable.js) (generation) functionality and [modal](./helpers/modal.js) (generation, validation, data extraction) functionality.
 
 ### Observations and lessons learned
 On the first week of release of this application to my organization Slack, 32 new Users started using the app in addition to previous 25 Users who were participating and keeping the score in a Word document! :laughing: I even did a presentation about this project in a monthly digital townhall!

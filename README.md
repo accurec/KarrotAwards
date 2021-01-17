@@ -43,18 +43,20 @@ It is setup as [Slack](https://slack.com/) application. In the backend the data 
 
 The application is making use of [Got](https://github.com/sindresorhus/got) and [Node HTML to Image](https://github.com/frinyvonnick/node-html-to-image) packages to make API requests and generate images from HTML.
 
-Although not actively used in the code as an API to produce and send messages back, half of the messages that are referenced in the [Message Templates](./app_setup_files/message_templates_collection.json) were generated (with very minor tweaks) by using [OpenAI API Beta](https://openai.com/) playground portal. I've got access to the open beta halfway through working on this project and was very impressed with the results that I was able to produce!
+Although not actively used in the code as an API to produce and send messages back, half of the messages that are referenced in the [message templates](./app_setup_files/message_templates_collection.json) were generated (with very minor tweaks) by using [OpenAI API Beta](https://openai.com/) playground portal. I've got access to the open beta halfway through working on this project and was very impressed with the results that I was able to produce!
 
 Since in this application we need to have actual emoji images to generate HTML table, the limitation of the application is that we need to add __KarrotAwards__ custom emojis to Slack workspace to be able to generate leaderboard and scorecards.
 
 Another limitation is that it looks like as of January 16, 2021 Slack commands are not supported in Slack Threads, so this application will not work there.
 
 ### Setup and testing
-First, Slack App needs to be configured and setup with __Slash Command__ endpoint as well as with __Interactivity & Shortcuts__ endpoint:
-
-![Slack app interactivity setup](./readme_files/slack_interactivity_setup.JPG)
+First, Slack App needs to be configured and setup with __Slash Command__ endpoint:
 
 ![Slack app slash command setup](./readme_files/slack_slash_command_setup.JPG)
+
+Also the app needs __Interactivity & Shortcuts__ endpoint:
+
+![Slack app interactivity setup](./readme_files/slack_interactivity_setup.JPG)
 
 The app needs bot scopes as follows:
 
@@ -86,20 +88,26 @@ All required ENV variables are listed in [this](./.env.template) file and here i
 - ```MAX_NUMBER_OF_SELECTED_USERS``` -> controls how many users can be selected in the app modal for awards
 - ```MAX_NUMBER_OF_SELECTED_AWARDS``` -> controls how many different awards can be given at once
 - ```AWARD_MESSAGE_MAX_CHARACTER_NUMBER``` -> controls max length of the award message that user is allowed to type in the modal
-- ```LEADERBOARD_DEFAULT_NUMBER_OF_USERS``` -> default number of users to show in the __karrotawards leaderboard__ command
+- ```LEADERBOARD_DEFAULT_NUMBER_OF_USERS``` -> default number of users to show in the __/karrotawards leaderboard__ command
 - ```LEADERBOARD_MAX_NUMBER_OF_USERS``` -> maximum allowed number of users to be shown in the __/karrotawards leaderboard x__ command
 - ```UDROP_KEY1``` -> uDrop requires two keys to authenticate API, so this is one of them
 - ```UDROP_KEY2``` -> uDrop requires two keys to authenticate API, so this is one of them
-- ```CONTRIBUTE_EMAIL_ADDR``` -> in __karrotawards help__ command there is a message at the bottom with contact email. This is different between different environments, so I made it configurable
+- ```CONTRIBUTE_EMAIL_ADDR``` -> in __/karrotawards help__ command there is a message at the bottom with contact email. This is different between different environments, so I made it configurable
 - ```WORK_NOTIFICATION_TIMEOUT_INTERVAL_MILLISECONDS``` -> controls how long each command should execute before sending generic "work in progress" to the user. This is needed to show user that something is happening for long running operations (such as image generation and upload), but do not show it for typically fast operations (such as modal opening), which sometimes can stil ltake long enough time, so that in this case the "work in progress" will be shown as well
 
 ### Code structure
+The main code file is [app.js](./app.js) in which most of the work happens. The main user entry points are:
+- ```app.command('/karrotawards', async ({ ack, body, respond, client }) => { ...``` -> listener for any __/karrotawards__ command payload
+- ```app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_submission' }, async ({ ack, body, view }) => { ...``` -> listener for awards modals submissions
+- ```app.view({ callback_id: 'karrotawards_modal_callback_id', type: 'view_closed' }, async ({ ack, body, view }) => { ...``` -> listener for awards modals closing, needed mostly for user interaction and behaviour analysis and logging
 
+Everything else is separate block functions that support the above entry points.
+Additionally, there are helpers related to [HTML functionality](./helpers/htmlTable.js) (generation) and [modal](./helpers/modal.js) (generation, validation, data extraction) functionality.
 
 ### Observations and lessons learned
 On the first week of release of this application to my organization Slack, 32 new Users started using the app in addition to previous 25 Users who were participating and keeping the score in a Word document! :laughing: I even did a presentation about this project in a monthly digital townhall!
 
-As for lessons learned - this whole project was a really amazing experience for me, since everything that has been done here I've never used before! Slack API, Bolt SDK, NodeJS, MongoDB, uDrop, Ngrok, Heroku, Got, NodeHTMLToImage, OpenAI GPT-3 Beta API - all these things I've done research on and put together as I was learning about them - was a one big exciting journey that helped to bring my vision to life and share it with others while having a quite a lot of fun! :blush:
+As for lessons learned - this whole project was a really amazing experience for me, since everything that has been done here I've never used before! Slack API, Bolt SDK, NodeJS, MongoDB, uDrop, Ngrok, Heroku, Got, NodeHTMLToImage, OpenAI GPT-3 Beta API - all these things I've done research on and put together as I was learning about them - was a one big exciting journey that helped to bring my vision to life and share it with others while having quite a lot of fun! :blush:
 
 ### Future improvements
 One improvement that I would really like to explore with this project is actual production use of [OpenAI API](https://openai.com/) and their GPT-3 engine to fully generate on the fly the award announcement messages. This could also be used for leaderboard announcements. For that I would need to experiment more with the API and GPT-3 engine to make sure it produces the results that are adequate to my use case. After that I would need to present my project to OpenAI team for approval.
